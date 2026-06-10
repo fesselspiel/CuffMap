@@ -1,0 +1,242 @@
+@import "leaflet/dist/leaflet.css";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #34242b;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 241, 0.96) 0%, rgba(248, 223, 231, 0.82) 46%, rgba(238, 245, 232, 0.9) 100%),
+    repeating-linear-gradient(90deg, rgba(184, 111, 99, 0.04) 0, rgba(184, 111, 99, 0.04) 1px, transparent 1px, transparent 42px);
+  min-height: 100vh;
+}
+
+::selection {
+  background: #f8dfe7;
+  color: #743246;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  background-color: #fffdf9;
+  color: #34242b;
+  font-size: 16px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #b86f63;
+  box-shadow: 0 0 0 3px rgba(184, 111, 99, 0.15);
+  outline: none;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.cuffmap-home-map {
+  height: calc(100dvh - 92px);
+  min-height: 420px;
+}
+
+.cuffmap-leaflet-root {
+  height: 100%;
+  min-height: 100%;
+}
+
+.map-popup img {
+  width: 180px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.cuffmap-pin {
+  background: transparent;
+  border: 0;
+}
+
+.cuffmap-pin span {
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform: rotate(45deg);
+  border: 2px solid #fff8f1;
+  border-radius: 50% 50% 50% 4px;
+  background: #a9435d;
+  box-shadow: 0 8px 18px rgba(116, 50, 70, 0.3);
+}
+
+.cuffmap-pin span::after {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 8px;
+  height: 8px;
+  content: "";
+  border-radius: 999px;
+  background: #fff8f1;
+}
+
+.cuffmap-photo-pin {
+  background: transparent;
+  border: 0;
+}
+
+.cuffmap-photo-pin span {
+  position: relative;
+  display: block;
+  width: 54px;
+  height: 54px;
+  overflow: hidden;
+  border: 3px solid #fff8f1;
+  border-radius: 999px;
+  background: #f8dfe7;
+  box-shadow: 0 12px 28px rgba(116, 50, 70, 0.28);
+}
+
+.cuffmap-photo-pin span::after {
+  position: absolute;
+  right: 16px;
+  bottom: -9px;
+  width: 18px;
+  height: 18px;
+  content: "";
+  transform: rotate(45deg);
+  border-right: 3px solid #fff8f1;
+  border-bottom: 3px solid #fff8f1;
+  background: inherit;
+}
+
+.cuffmap-photo-pin img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cuffmap-product-cluster {
+  background: transparent;
+  border: 0;
+}
+
+.cuffmap-product-cluster span {
+  position: relative;
+  display: block;
+  width: 62px;
+  height: 62px;
+  overflow: hidden;
+  border: 3px solid #fff8f1;
+  border-radius: 999px;
+  background: #f8dfe7;
+  box-shadow: 0 14px 30px rgba(116, 50, 70, 0.32);
+}
+
+.cuffmap-product-cluster span::after {
+  position: absolute;
+  right: 18px;
+  bottom: -10px;
+  width: 19px;
+  height: 19px;
+  content: "";
+  transform: rotate(45deg);
+  border-right: 3px solid #fff8f1;
+  border-bottom: 3px solid #fff8f1;
+  background: inherit;
+}
+
+.cuffmap-product-cluster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cuffmap-product-cluster b {
+  position: absolute;
+  z-index: 2;
+  right: 3px;
+  bottom: 3px;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  place-items: center;
+  border: 2px solid #fff8f1;
+  border-radius: 999px;
+  background: #a9435d;
+  color: white;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.cuffmap-product-cluster-empty span {
+  display: grid;
+  place-items: center;
+}
+
+.cuffmap-product-cluster-empty b {
+  position: static;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #fffdf9;
+  color: #34242b;
+}
+
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(169, 67, 93, 0.22);
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: #a9435d;
+  color: white;
+}
+
+@media (max-width: 640px) {
+  body {
+    background:
+      linear-gradient(160deg, rgba(255, 248, 241, 0.98) 0%, rgba(248, 223, 231, 0.9) 48%, rgba(238, 245, 232, 0.92) 100%);
+  }
+
+  .leaflet-control-zoom a {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cuffmap-home-map {
+    height: calc(100dvh - 57px);
+    min-height: 620px;
+  }
+}

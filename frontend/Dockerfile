@@ -1,0 +1,23 @@
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+
+FROM deps AS development
+COPY . .
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
+FROM deps AS builder
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine AS production
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=deps /app/node_modules ./node_modules
+EXPOSE 3000
+CMD ["npm", "run", "start"]

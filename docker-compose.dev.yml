@@ -1,0 +1,31 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8088/api
+
+  api:
+    build:
+      context: ./api
+      target: development
+    command: sh -lc "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    volumes:
+      - ./api:/var/www/html
+      - api_vendor:/var/www/html/vendor
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+volumes:
+  frontend_node_modules:
+  api_vendor:
