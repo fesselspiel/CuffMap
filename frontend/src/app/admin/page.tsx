@@ -3,6 +3,7 @@
 import { CheckSquare, ClipboardCheck, Eye, EyeOff, RefreshCw, Square } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import AdminGuard from "@/components/AdminGuard";
 import { api } from "@/lib/api";
 
 type Product = {
@@ -22,7 +23,7 @@ const visibilityLabels: Record<Product["visibility"], string> = {
   internal: "intern",
 };
 
-export default function AdminPage() {
+function AdminPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -221,5 +222,13 @@ export default function AdminPage() {
         ))}
       </div>
     </main>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <AdminGuard allowedRoles={["administrator"]}>
+      <AdminPageContent />
+    </AdminGuard>
   );
 }

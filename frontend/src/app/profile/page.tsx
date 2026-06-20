@@ -18,16 +18,28 @@ export default function ProfilePage() {
       .catch(() => setUser(null));
   }, []);
 
-  function publicBaseDomain() {
-    const configured = process.env.NEXT_PUBLIC_PUBLIC_BASE_DOMAIN || process.env.NEXT_PUBLIC_APP_URL;
-    if (!configured && typeof window !== "undefined") return window.location.hostname;
-
+  function hostOnly(value?: string) {
+    if (!value) return "";
     try {
-      return new URL(configured || "").hostname;
+      return new URL(value).hostname;
     } catch {
-      return configured || "cuffmap.fesselspiel.com";
+      return value.replace(/^https?:\/\//, "").split("/")[0];
     }
   }
+
+  function publicBaseDomains() {
+    const configured = process.env.NEXT_PUBLIC_PUBLIC_BASE_DOMAINS || process.env.NEXT_PUBLIC_PUBLIC_BASE_DOMAIN || process.env.NEXT_PUBLIC_APP_URL || "";
+    const domains = configured
+      .split(",")
+      .map((item) => hostOnly(item.trim()))
+      .filter(Boolean);
+    if (domains.length > 0) return Array.from(new Set(domains));
+    if (typeof window !== "undefined") return [window.location.hostname];
+    return ["cuffmap.fesselspiel.com"];
+  }
+
+  const baseDomains = publicBaseDomains();
+  const primaryBaseDomain = baseDomains[0] || "cuffmap.fesselspiel.com";
 
   async function saveSubdomain() {
     setMessage("");
@@ -66,7 +78,7 @@ export default function ProfilePage() {
                     className="min-w-0 flex-1 bg-transparent outline-none"
                     placeholder="username"
                   />
-                  <span className="max-w-[45%] truncate text-sm text-ink/55 sm:max-w-none">.{publicBaseDomain()}</span>
+                  <span className="max-w-[45%] truncate text-sm text-ink/55 sm:max-w-none">.{primaryBaseDomain}</span>
                 </div>
                 <button onClick={saveSubdomain} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-wine px-4 py-2 text-white shadow-sm hover:bg-rose">
                   <Save size={16} />
@@ -75,9 +87,10 @@ export default function ProfilePage() {
               </div>
               <p className="mt-2 text-xs leading-5 text-ink/55">
                 Erlaubt sind Kleinbuchstaben, Zahlen und Bindestriche. Reservierte Namen wie admin, api, www oder shopify sind gesperrt.
+                {baseDomains.length > 1 && ` Die Subdomain gilt fuer: ${baseDomains.map((domain) => `username.${domain}`).join(", ")}.`}
               </p>
               {user.public_subdomain && (
-                <a href={`https://${user.public_subdomain}.${publicBaseDomain()}`} target="_blank" className="mt-2 inline-block text-sm font-medium text-rose underline">
+                <a href={`https://${user.public_subdomain}.${primaryBaseDomain}`} target="_blank" className="mt-2 inline-block text-sm font-medium text-rose underline">
                   Öffentliche Seite öffnen
                 </a>
               )}

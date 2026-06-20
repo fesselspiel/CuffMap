@@ -34,6 +34,7 @@ services:
       NEXT_PUBLIC_API_BASE_URL: /api
       NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:8088}
       NEXT_PUBLIC_PUBLIC_BASE_DOMAIN: ${PUBLIC_BASE_DOMAIN:-cuffmap.fesselspiel.com}
+      NEXT_PUBLIC_PUBLIC_BASE_DOMAINS: ${PUBLIC_BASE_DOMAINS:-cuffmap.fesselspiel.com}
     depends_on:
       - api
     networks:
@@ -49,6 +50,7 @@ services:
       APP_KEY: ${APP_KEY:-base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
       APP_URL: ${APP_URL:-https://cuffmap.fesselspiel.com}
       PUBLIC_BASE_DOMAIN: ${PUBLIC_BASE_DOMAIN:-cuffmap.fesselspiel.com}
+      PUBLIC_BASE_DOMAINS: ${PUBLIC_BASE_DOMAINS:-cuffmap.fesselspiel.com}
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       UPLOAD_MAX_SIZE: ${UPLOAD_MAX_SIZE:-8388608}
@@ -98,6 +100,7 @@ services:
       SHOPIFY_API_VERSION: ${SHOPIFY_API_VERSION:-2026-04}
       SHOPIFY_STOREFRONT_BASE_URL: ${SHOPIFY_STOREFRONT_BASE_URL}
       PUBLIC_BASE_DOMAIN: ${PUBLIC_BASE_DOMAIN:-cuffmap.fesselspiel.com}
+      PUBLIC_BASE_DOMAINS: ${PUBLIC_BASE_DOMAINS:-cuffmap.fesselspiel.com}
       LETSENCRYPT_ENABLED: ${LETSENCRYPT_ENABLED:-false}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-}
       LETSENCRYPT_WEBROOT: ${LETSENCRYPT_WEBROOT:-/var/www/certbot}

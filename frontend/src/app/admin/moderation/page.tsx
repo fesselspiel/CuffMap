@@ -3,6 +3,7 @@
 import { Check, Eye, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import AdminGuard from "@/components/AdminGuard";
 import { api } from "@/lib/api";
 
 const statusLabels: Record<string, string> = {
@@ -14,7 +15,7 @@ const statusLabels: Record<string, string> = {
 
 const filters = ["submitted", "reviewing", "approved", "rejected"];
 
-export default function ModerationPage() {
+function ModerationPageContent() {
   const [posts, setPosts] = useState<any[]>([]);
   const [status, setStatus] = useState("submitted");
   const [message, setMessage] = useState("");
@@ -128,5 +129,13 @@ export default function ModerationPage() {
         })}
       </section>
     </main>
+  );
+}
+
+export default function ModerationPage() {
+  return (
+    <AdminGuard allowedRoles={["administrator", "moderator"]}>
+      <ModerationPageContent />
+    </AdminGuard>
   );
 }

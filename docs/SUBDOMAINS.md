@@ -4,6 +4,7 @@ CuffMap unterstützt öffentliche Nutzerseiten unter Wildcard-Subdomains, z. B.:
 
 ```text
 user.cuffmap.fesselspiel.com
+user.cuffmap.com
 ```
 
 Beim Aufruf einer Subdomain erkennt die API den `Host`-Header, lädt den zugeordneten Nutzer über `users.public_subdomain` und liefert nur dessen freigegebene Beiträge (`status=approved`) aus.
@@ -15,6 +16,8 @@ Für den Produktivbetrieb müssen beide Records auf den Server zeigen:
 ```text
 cuffmap.fesselspiel.com       A/AAAA  SERVER-IP
 *.cuffmap.fesselspiel.com     A/AAAA  SERVER-IP
+cuffmap.com                   A/AAAA  SERVER-IP
+*.cuffmap.com                 A/AAAA  SERVER-IP
 ```
 
 Ohne Wildcard-DNS funktionieren einzelne Nutzer-Subdomains nicht zuverlässig. Der Betrieb per `http://SERVER-IP:PUBLIC_TEST_PORT` bleibt für Entwicklung und Tests möglich.
@@ -24,10 +27,12 @@ Ohne Wildcard-DNS funktionieren einzelne Nutzer-Subdomains nicht zuverlässig. D
 ```env
 APP_URL=https://cuffmap.fesselspiel.com
 PUBLIC_BASE_DOMAIN=cuffmap.fesselspiel.com
+PUBLIC_BASE_DOMAINS=cuffmap.fesselspiel.com,cuffmap.com
 NEXT_PUBLIC_PUBLIC_BASE_DOMAIN=cuffmap.fesselspiel.com
+NEXT_PUBLIC_PUBLIC_BASE_DOMAINS=cuffmap.fesselspiel.com,cuffmap.com
 ```
 
-`PUBLIC_BASE_DOMAIN` ist die Basis, gegen die Laravel Subdomains aus dem Host-Header erkennt.
+`PUBLIC_BASE_DOMAIN` bleibt die primaere Basisdomain. `PUBLIC_BASE_DOMAINS` ist die kommagetrennte Liste aller Domains, gegen die Laravel Subdomains aus dem Host-Header erkennt. Beim Setzen einer Nutzer-Subdomain wird dieselbe Subdomain fuer alle Basisdomains verwendet, z. B. `user.cuffmap.fesselspiel.com` und `user.cuffmap.com`.
 
 ## Let’s Encrypt ohne DNS-Challenge
 
@@ -36,12 +41,15 @@ Wildcard-Zertifikate fuer `*.cuffmap.fesselspiel.com` sind mit der HTTP-01-Chall
 
 ```text
 user.cuffmap.fesselspiel.com
+user.cuffmap.com
 ```
 
 Voraussetzungen:
 
 - `cuffmap.fesselspiel.com` zeigt auf den Server.
 - `*.cuffmap.fesselspiel.com` zeigt per Wildcard-DNS auf denselben Server.
+- `cuffmap.com` zeigt auf den Server.
+- `*.cuffmap.com` zeigt per Wildcard-DNS auf denselben Server.
 - Port 80 ist von Let's Encrypt erreichbar.
 - Nginx liefert `/.well-known/acme-challenge/` aus dem ACME-Webroot aus.
 
@@ -108,10 +116,10 @@ location ^~ /.well-known/acme-challenge/ {
 }
 ```
 
-Die externe Nginx-Konfiguration muss beide Hosts bedienen:
+Die externe Nginx-Konfiguration muss alle Hauptdomains und Wildcard-Hosts bedienen:
 
 ```nginx
-server_name cuffmap.fesselspiel.com *.cuffmap.fesselspiel.com;
+server_name cuffmap.fesselspiel.com *.cuffmap.fesselspiel.com cuffmap.com *.cuffmap.com;
 ```
 
 Die Beispielkonfiguration liegt unter:
@@ -128,7 +136,7 @@ Fuer automatisch eingebundene Nutzer-Zertifikate liegt ein Generator unter:
 infra/nginx/cuffmap-refresh-subdomain-nginx.sh
 ```
 
-Dieser erzeugt aus vorhandenen Zertifikaten passende Nginx-Serverbloecke fuer `*.cuffmap.fesselspiel.com`, testet die Nginx-Konfiguration und laedt Nginx neu. Auf Hosts mit externem Nginx sollte er per systemd-Timer regelmaessig laufen und als Certbot-Deploy-Hook eingebunden werden:
+Dieser erzeugt aus vorhandenen Zertifikaten passende Nginx-Serverbloecke fuer alle Domains aus `PUBLIC_BASE_DOMAINS`, testet die Nginx-Konfiguration und laedt Nginx neu. Auf Hosts mit externem Nginx sollte er per systemd-Timer regelmaessig laufen und als Certbot-Deploy-Hook eingebunden werden:
 
 ```bash
 install -m 0755 infra/nginx/cuffmap-refresh-subdomain-nginx.sh /usr/local/sbin/cuffmap-refresh-subdomain-nginx

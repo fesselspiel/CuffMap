@@ -3,10 +3,20 @@
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { use, useEffect, useState } from "react";
+import AdminGuard from "@/components/AdminGuard";
 import { api } from "@/lib/api";
 
 export default function AdminProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+
+  return (
+    <AdminGuard allowedRoles={["administrator"]}>
+      <AdminProductContent id={id} />
+    </AdminGuard>
+  );
+}
+
+function AdminProductContent({ id }: { id: string }) {
   const router = useRouter();
   const [product, setProduct] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);

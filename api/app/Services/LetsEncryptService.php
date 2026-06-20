@@ -26,12 +26,21 @@ class LetsEncryptService
             throw new RuntimeException('Invalid public subdomain.');
         }
 
-        $baseDomain = PublicSubdomain::baseDomain();
-        if (! $baseDomain) {
-            throw new RuntimeException('PUBLIC_BASE_DOMAIN is not configured.');
+        $baseDomains = PublicSubdomain::baseDomains();
+        if ($baseDomains === []) {
+            throw new RuntimeException('PUBLIC_BASE_DOMAIN or PUBLIC_BASE_DOMAINS is not configured.');
         }
 
-        $domain = $subdomain.'.'.$baseDomain;
+        $results = [];
+        foreach ($baseDomains as $baseDomain) {
+            $results[] = $this->requestCertificate($subdomain.'.'.$baseDomain, $user);
+        }
+
+        return count($results) === 1 ? $results[0] : ['status' => 'processed', 'domains' => $results];
+    }
+
+    private function requestCertificate(string $domain, ?User $user = null): array
+    {
         if ($this->certificateExists($domain)) {
             return ['status' => 'exists', 'domain' => $domain];
         }

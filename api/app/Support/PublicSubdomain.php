@@ -69,26 +69,48 @@ class PublicSubdomain
 
     public static function baseDomain(): ?string
     {
-        $configured = self::hostOnly(env('PUBLIC_BASE_DOMAIN'));
-        if ($configured) {
-            return $configured;
+        return self::baseDomains()[0] ?? null;
+    }
+
+    public static function baseDomains(): array
+    {
+        $domains = [];
+
+        foreach (explode(',', (string) env('PUBLIC_BASE_DOMAINS', '')) as $domain) {
+            $host = self::hostOnly($domain);
+            if ($host) {
+                $domains[] = $host;
+            }
         }
 
-        return self::hostOnly(env('APP_URL'));
+        foreach ([env('PUBLIC_BASE_DOMAIN'), env('APP_URL')] as $domain) {
+            $host = self::hostOnly($domain);
+            if ($host) {
+                $domains[] = $host;
+            }
+        }
+
+        return array_values(array_unique($domains));
     }
 
     public static function fromRequest(Request $request): ?string
     {
         $host = self::hostOnly($request->getHost());
-        $base = self::baseDomain();
-
-        if (! $host || ! $base || $host === $base || ! str_ends_with($host, '.'.$base)) {
+        if (! $host) {
             return null;
         }
 
-        $prefix = Str::beforeLast($host, '.'.$base);
+        foreach (self::baseDomains() as $base) {
+            if ($host === $base || ! str_ends_with($host, '.'.$base)) {
+                continue;
+            }
 
-        return str_contains($prefix, '.') ? null : self::normalize($prefix);
+            $prefix = Str::beforeLast($host, '.'.$base);
+
+            return str_contains($prefix, '.') ? null : self::normalize($prefix);
+        }
+
+        return null;
     }
 
     private static function hostOnly(?string $value): ?string

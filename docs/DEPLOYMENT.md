@@ -7,6 +7,8 @@
 - Externer Nginx mit SSL-Zertifikaten oder Docker-Reverse-Proxy auf Port 80/443
 - DNS-A-Record für `cuffmap.fesselspiel.com`, falls Domainbetrieb gewünscht ist
 - DNS-Wildcard-Record für `*.cuffmap.fesselspiel.com`, falls Nutzer-Subdomains verwendet werden
+- DNS-A-Record für `cuffmap.com`, falls die zusätzliche Hauptdomain verwendet wird
+- DNS-Wildcard-Record für `*.cuffmap.com`, falls Nutzer-Subdomains auch unter `cuffmap.com` verwendet werden
 
 DNS ist nicht zwingend: Für Tests genügt `http://SERVER-IP:PUBLIC_TEST_PORT`.
 
@@ -46,7 +48,7 @@ proxy_pass http://127.0.0.1:8088;
 
 Für größere Bilder `client_max_body_size` passend zu `UPLOAD_MAX_SIZE` setzen.
 
-Für Nutzer-Subdomains muss der externe Nginx `cuffmap.fesselspiel.com` und `*.cuffmap.fesselspiel.com` bedienen. CuffMap nutzt keine DNS-API und keine DNS-01-Challenge. Stattdessen werden einzelne Zertifikate pro Nutzer-Subdomain per Let’s-Encrypt-HTTP-01-Challenge erstellt.
+Für Nutzer-Subdomains muss der externe Nginx `cuffmap.fesselspiel.com`, `*.cuffmap.fesselspiel.com`, `cuffmap.com` und `*.cuffmap.com` bedienen. CuffMap nutzt keine DNS-API und keine DNS-01-Challenge. Stattdessen werden einzelne Zertifikate pro Nutzer-Subdomain per Let’s-Encrypt-HTTP-01-Challenge erstellt.
 
 Wichtige Produktionswerte:
 
@@ -54,6 +56,7 @@ Wichtige Produktionswerte:
 PUBLIC_TEST_PORT=80
 HTTPS_PORT=443
 PUBLIC_BASE_DOMAIN=cuffmap.fesselspiel.com
+PUBLIC_BASE_DOMAINS=cuffmap.fesselspiel.com,cuffmap.com
 LETSENCRYPT_ENABLED=true
 LETSENCRYPT_EMAIL=admin@example.com
 LETSENCRYPT_STAGING=false
