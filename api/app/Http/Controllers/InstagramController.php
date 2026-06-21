@@ -30,7 +30,7 @@ class InstagramController
             return response()->json($this->ownBusinessMedia());
         }
 
-        $fields = 'id,username,media_count,media.limit(24){id,caption,media_type,media_url,thumbnail_url,permalink,timestamp}';
+        $fields = 'id,username,media_count,media.limit(24){id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp}';
         $profile = $this->businessDiscovery($username, $fields);
         return response()->json($profile['media']['data'] ?? []);
     }
@@ -79,7 +79,7 @@ class InstagramController
     {
         $config = $this->config();
         $response = $this->graphGet($config, "{$config['business_account_id']}/media", [
-            'fields' => 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp',
+            'fields' => 'id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp',
             'limit' => 24,
         ]);
 

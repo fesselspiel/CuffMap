@@ -15,6 +15,7 @@ class PostInstagramLink extends Model
         'media_url',
         'thumbnail_url',
         'media_type',
+        'media_product_type',
         'posted_at',
         'source',
         'sort_order',

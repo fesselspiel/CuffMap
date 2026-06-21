@@ -23,6 +23,7 @@ type InstagramLink = {
   media_url?: string | null;
   thumbnail_url?: string | null;
   media_type?: string | null;
+  media_product_type?: string | null;
   posted_at?: string | null;
   source?: "manual" | "api";
 };
@@ -263,6 +264,13 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
     setInstagramLinks((current) => current.filter((item) => normalizeInstagramUrl(item.permalink) !== normalized));
   }
 
+  function instagramTypeLabel(link: InstagramLink) {
+    if (link.media_product_type === "REELS" || link.permalink.includes("/reel/")) return "Reel";
+    if (link.media_type === "VIDEO") return "Video";
+    if (link.media_type === "CAROUSEL_ALBUM") return "Album";
+    return "Post";
+  }
+
   async function loadInstagramMedia() {
     const username = instagramUsername.trim().replace(/^@/, "");
     if (!username) {
@@ -282,6 +290,7 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
         media_url: item.media_url,
         thumbnail_url: item.thumbnail_url,
         media_type: item.media_type,
+        media_product_type: item.media_product_type,
         posted_at: item.timestamp,
         source: "api",
       })));
@@ -327,6 +336,7 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
         media_url: link.media_url || null,
         thumbnail_url: link.thumbnail_url || null,
         media_type: link.media_type || null,
+        media_product_type: link.media_product_type || null,
         posted_at: link.posted_at || null,
         source: link.source || "manual",
       })),
@@ -466,7 +476,10 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
                     {link.thumbnail_url || link.media_url ? <img src={link.thumbnail_url || link.media_url || ""} alt="" className="h-full w-full object-cover" /> : <Instagram size={20} />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate font-medium text-wine">{link.username ? `@${link.username}` : "Instagram-Post"}</span>
+                    <span className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="truncate font-medium text-wine">{link.username ? `@${link.username}` : "Instagram-Post"}</span>
+                      <span className="rounded-md bg-blush px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-rose">{instagramTypeLabel(link)}</span>
+                    </span>
                     <a href={link.permalink} target="_blank" className="block truncate text-xs text-rose underline">{link.permalink}</a>
                   </span>
                   <button type="button" onClick={() => removeInstagramLink(link.permalink)} className="grid h-10 w-10 place-items-center rounded-md border border-line text-wine hover:bg-blush" aria-label="Instagram-Link entfernen">
@@ -569,6 +582,31 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
               </button>
             </div>
 
+            {instagramLinks.length > 0 && (
+              <section className="mt-4 rounded-md border border-line bg-[#fffdf9]/85 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-clay">Ausgewählt</p>
+                <div className="mt-2 grid gap-2">
+                  {instagramLinks.map((link) => (
+                    <div key={link.permalink} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-line bg-cream/70 p-2">
+                      <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-md border border-line bg-blush text-rose">
+                        {link.thumbnail_url || link.media_url ? <img src={link.thumbnail_url || link.media_url || ""} alt="" className="h-full w-full object-cover" /> : <Instagram size={18} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="truncate text-sm font-medium text-wine">{link.username ? `@${link.username}` : "Instagram-Link"}</span>
+                          <span className="rounded-md bg-blush px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-rose">{instagramTypeLabel(link)}</span>
+                        </span>
+                        <a href={link.permalink} target="_blank" className="block truncate text-xs text-rose underline">{link.permalink}</a>
+                      </span>
+                      <button type="button" onClick={() => removeInstagramLink(link.permalink)} className="grid h-9 w-9 place-items-center rounded-md border border-line text-wine hover:bg-blush" aria-label="Instagram-Link entfernen">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <div className="mt-4 grid gap-3 rounded-md border border-line bg-[#fffdf9]/78 p-3">
               <label className="text-sm font-medium text-wine">
                 Instagram-Benutzer suchen
@@ -610,7 +648,11 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
                         {item.thumbnail_url || item.media_url ? <img src={item.thumbnail_url || item.media_url || ""} alt="" className="h-full w-full object-cover" /> : <Instagram size={22} />}
                       </span>
                       <span className="min-w-0">
-                        <span className="block font-medium text-wine">{selected ? "Ausgewählt" : "Auswählen"}</span>
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-wine">{selected ? "Ausgewählt" : "Auswählen"}</span>
+                          <span className="rounded-md bg-blush px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-rose">{instagramTypeLabel(item)}</span>
+                        </span>
+                        <span className="mt-1 block truncate text-xs text-rose">{item.permalink}</span>
                         <span className="mt-1 line-clamp-3 text-xs leading-5 text-ink/60">{item.caption || item.permalink}</span>
                       </span>
                     </button>

@@ -143,6 +143,7 @@ class PostController
             'instagram_links.*.media_url' => ['nullable', 'url', 'max:1000'],
             'instagram_links.*.thumbnail_url' => ['nullable', 'url', 'max:1000'],
             'instagram_links.*.media_type' => ['nullable', 'string', 'max:60'],
+            'instagram_links.*.media_product_type' => ['nullable', 'string', 'max:60'],
             'instagram_links.*.posted_at' => ['nullable', 'date'],
             'instagram_links.*.source' => ['nullable', 'in:manual,api'],
         ];
@@ -207,6 +208,7 @@ class PostController
                     'media_url' => $link['media_url'] ?? null,
                     'thumbnail_url' => $link['thumbnail_url'] ?? null,
                     'media_type' => $link['media_type'] ?? null,
+                    'media_product_type' => $link['media_product_type'] ?? null,
                     'posted_at' => $link['posted_at'] ?? null,
                     'source' => $link['source'] ?? 'manual',
                     'sort_order' => $index,

@@ -55,7 +55,7 @@ Beitrag erstellen:
   "gps_consent": false,
   "image_ids": [1],
   "products": [{ "product_id": 1, "product_variant_id": null, "variant_group_id": null }],
-  "instagram_links": [{ "permalink": "https://www.instagram.com/p/ABC123/" }]
+  "instagram_links": [{ "permalink": "https://www.instagram.com/reel/ABC123/", "media_product_type": "REELS" }]
 }
 ```
 
@@ -69,7 +69,7 @@ Diese Endpunkte benötigen `INSTAGRAM_GRAPH_ACCESS_TOKEN` und `INSTAGRAM_BUSINES
 Die Instagram-Suche prüft zuerst den gespeicherten eigenen Instagram Business Account direkt:
 
 - `GET https://graph.facebook.com/{version}/{ig_business_account_id}?fields=id,username,...`
-- bei passendem Handle: `GET https://graph.facebook.com/{version}/{ig_business_account_id}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp`
+- bei passendem Handle: `GET https://graph.facebook.com/{version}/{ig_business_account_id}/media?fields=id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp`
 
 Nur wenn der eingegebene Handle nicht zum gespeicherten Business Account gehört, nutzt die API Meta Business Discovery:
 

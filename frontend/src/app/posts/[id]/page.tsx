@@ -28,6 +28,12 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   const latitude = Number(post.latitude);
   const longitude = Number(post.longitude);
   const locationLabel = isCoordinateLabel(post.location_label) ? null : post.location_label;
+  const instagramTypeLabel = (link: any) => {
+    if (link.media_product_type === "REELS" || link.permalink?.includes("/reel/")) return "Reel";
+    if (link.media_type === "VIDEO") return "Video";
+    if (link.media_type === "CAROUSEL_ALBUM") return "Album";
+    return "Post";
+  };
 
   return (
     <main className="mx-auto max-w-4xl px-3 py-4 sm:px-4 sm:py-8">
@@ -102,7 +108,10 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                     {(link.thumbnail_url || link.media_url) ? <img src={link.thumbnail_url || link.media_url} alt="" className="h-full w-full object-cover" /> : "IG"}
                   </span>
                   <span className="min-w-0">
-                    <strong className="block truncate text-wine">{link.username ? `@${link.username}` : "Instagram-Post"}</strong>
+                    <span className="flex min-w-0 flex-wrap items-center gap-2">
+                      <strong className="truncate text-wine">{link.username ? `@${link.username}` : "Instagram-Post"}</strong>
+                      <span className="rounded-md bg-blush px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-rose">{instagramTypeLabel(link)}</span>
+                    </span>
                     {link.caption && <span className="mt-1 line-clamp-2 block text-sm leading-5 text-ink/65">{link.caption}</span>}
                     <span className="mt-1 block text-xs text-rose">Auf Instagram öffnen</span>
                   </span>
