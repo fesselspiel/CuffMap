@@ -1,30 +1,26 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('post_instagram_links') || Schema::hasColumn('post_instagram_links', 'media_product_type')) {
+        if (! Schema::hasTable('post_instagram_links')) {
             return;
         }
 
-        Schema::table('post_instagram_links', function (Blueprint $table) {
-            $table->string('media_product_type')->nullable()->after('media_type');
-        });
+        DB::statement('ALTER TABLE post_instagram_links ADD COLUMN IF NOT EXISTS media_product_type varchar(255) NULL');
     }
 
     public function down(): void
     {
-        if (! Schema::hasTable('post_instagram_links') || ! Schema::hasColumn('post_instagram_links', 'media_product_type')) {
+        if (! Schema::hasTable('post_instagram_links')) {
             return;
         }
 
-        Schema::table('post_instagram_links', function (Blueprint $table) {
-            $table->dropColumn('media_product_type');
-        });
+        DB::statement('ALTER TABLE post_instagram_links DROP COLUMN IF EXISTS media_product_type');
     }
 };
