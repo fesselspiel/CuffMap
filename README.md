@@ -67,8 +67,8 @@ Die Anwendung funktioniert auch ohne DNS direkt per `http://SERVER-IP:PUBLIC_TES
 - `SHOPIFY_ADMIN_API_TOKEN`: Token der Shopify Custom App
 - `SHOPIFY_API_VERSION`: Admin API Version
 - `SHOPIFY_STOREFRONT_BASE_URL`: Shop-URL für Produktlinks
-- `INSTAGRAM_GRAPH_ACCESS_TOKEN`: Meta Graph API Token für Instagram Business Discovery
-- `INSTAGRAM_BUSINESS_ACCOUNT_ID`: Instagram Business/Creator Account ID, über den Business Discovery ausgeführt wird
+- `INSTAGRAM_GRAPH_ACCESS_TOKEN`: Meta Graph API Token für den eigenen Instagram Business Account und optional Business Discovery
+- `INSTAGRAM_BUSINESS_ACCOUNT_ID`: Instagram Business/Creator Account ID, die direkt gelesen wird und optional Business Discovery ausführt
 - `INSTAGRAM_API_VERSION`: Meta Graph API Version, z. B. `v23.0`
 - `CORS_ALLOWED_ORIGINS`: erlaubte Frontend-Origins
 

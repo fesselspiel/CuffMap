@@ -66,6 +66,17 @@ Beitrag erstellen:
 
 Diese Endpunkte benötigen `INSTAGRAM_GRAPH_ACCESS_TOKEN` und `INSTAGRAM_BUSINESS_ACCOUNT_ID`. Manuelle Instagram-URLs können auch ohne API-Konfiguration gespeichert werden.
 
+Die Instagram-Suche prüft zuerst den gespeicherten eigenen Instagram Business Account direkt:
+
+- `GET https://graph.facebook.com/{version}/{ig_business_account_id}?fields=id,username,...`
+- bei passendem Handle: `GET https://graph.facebook.com/{version}/{ig_business_account_id}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp`
+
+Nur wenn der eingegebene Handle nicht zum gespeicherten Business Account gehört, nutzt die API Meta Business Discovery:
+
+- `GET https://graph.facebook.com/{version}/{ig_business_account_id}?fields=business_discovery.username(handle){...}`
+
+Business Discovery benötigt die dafür von Meta freigegebenen Berechtigungen. Wenn Meta `(#10) Application does not have permission for this action` zurückgibt, funktionieren eigene verknüpfte Konten weiterhin direkt über die gespeicherte Business Account ID; fremde Handles müssen in Meta für Business Discovery berechtigt sein. Tokens werden bei Fehlern nicht geloggt.
+
 ## Karte
 
 - `GET /api/map/markers`
