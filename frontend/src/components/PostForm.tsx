@@ -579,6 +579,7 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
                     {instagramLoading ? "Lade..." : "Suchen"}
                   </button>
                 </div>
+                <span className="mt-1 block text-xs font-normal text-ink/55">Instagram erlaubt hier nur die Suche nach einem exakten Handle, keine freie Vorschlagssuche.</span>
               </label>
 
               <label className="text-sm font-medium text-wine">

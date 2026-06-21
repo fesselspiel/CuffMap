@@ -81,9 +81,14 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         )}
         <div className="grid gap-3 sm:grid-cols-2">
           {post.products?.map((product: any) => (
-            <a key={product.id} href={product.shop_url || "#"} className="rounded-md border border-line bg-[#fffdf9] p-4 hover:bg-blush/45">
-              <strong className="text-wine">{product.display_title || product.title}</strong>
-              <span className="block text-sm text-rose">Zum Shop</span>
+            <a key={product.id} href={product.shop_url || "#"} className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3 rounded-md border border-line bg-[#fffdf9] p-3 hover:bg-blush/45">
+              <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-md border border-line bg-sage text-xs text-ink/45">
+                {product.image_url ? <img src={product.image_url} alt="" className="h-full w-full object-contain" /> : "kein Bild"}
+              </span>
+              <span className="min-w-0">
+                <strong className="block truncate text-wine">{product.display_title || product.title}</strong>
+                <span className="block text-sm text-rose">Zum Shop</span>
+              </span>
             </a>
           ))}
         </div>
