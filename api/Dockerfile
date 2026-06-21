@@ -11,6 +11,11 @@ RUN apk add --no-cache postgresql-dev libpng-dev libjpeg-turbo-dev freetype-dev 
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_pgsql gd mbstring exif \
     && apk del autoconf g++ make linux-headers
+RUN { \
+        echo "upload_max_filesize=20M"; \
+        echo "post_max_size=24M"; \
+        echo "memory_limit=256M"; \
+    } > /usr/local/etc/php/conf.d/cuffmap-uploads.ini
 COPY --from=vendor /app /var/www/html
 RUN mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache

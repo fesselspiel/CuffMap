@@ -102,14 +102,32 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
     if (message.toLowerCase().includes("pattern")) {
       return "Dieses Bild konnte nicht hochgeladen werden. Bitte JPG/JPEG, PNG oder WEBP verwenden.";
     }
+    if (message.toLowerCase().includes("failed to upload") || message.toLowerCase().includes("zu groß")) {
+      return "Das Bild konnte nicht hochgeladen werden. Bitte JPG/JPEG, PNG oder WEBP bis zur erlaubten Uploadgröße verwenden.";
+    }
     return message || "Upload fehlgeschlagen";
+  }
+
+  function showLocalPreview(file: File) {
+    setImageSize(null);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      setImagePreview(dataUrl);
+
+      const image = new Image();
+      image.onload = () => setImageSize({ width: image.naturalWidth, height: image.naturalHeight });
+      image.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   }
 
   async function upload(formData: FormData) {
     const token = getStoredToken();
     const response = await fetch(`${API_BASE}/uploads/image`, {
       method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: token ? { Accept: "application/json", Authorization: `Bearer ${token}` } : { Accept: "application/json" },
       body: formData
     });
     const body: { id: number; path: string; width?: number; height?: number; message?: string } = await response.json();
@@ -276,8 +294,7 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
               if (!file) return;
               setMessage("Bild wird hochgeladen...");
               setImageId(null);
-              setImagePreview("");
-              setImageSize(null);
+              showLocalPreview(file);
               const fd = new FormData();
               fd.set("image", file);
               fd.set("use_exif_gps", "false");

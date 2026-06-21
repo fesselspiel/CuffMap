@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PostImage;
 use App\Services\ImageService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,6 +16,11 @@ class UploadController
 
     public function store(Request $request)
     {
+        $uploaded = $request->file('image');
+        if ($uploaded instanceof UploadedFile && ! $uploaded->isValid()) {
+            return response()->json(['message' => $this->uploadFailureMessage($uploaded->getError())], 422);
+        }
+
         $maxKb = (int) ceil(((int) env('UPLOAD_MAX_SIZE', 8388608)) / 1024);
         $data = $request->validate([
             'image' => ['required', 'file', 'mimetypes:image/jpeg,image/pjpeg,image/png,image/webp', 'max:'.$maxKb],
@@ -26,6 +32,15 @@ class UploadController
         $image = PostImage::create(array_merge($result, ['user_id' => $request->user()->id]));
 
         return response()->json($image, 201);
+    }
+
+    private function uploadFailureMessage(int $error): string
+    {
+        return match ($error) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Das Bild ist zu groß für den Upload. Bitte ein kleineres Bild wählen oder die Uploadgröße erhöhen.',
+            UPLOAD_ERR_PARTIAL => 'Das Bild wurde nur teilweise übertragen. Bitte erneut versuchen.',
+            default => 'Das Bild konnte nicht hochgeladen werden. Bitte JPG/JPEG, PNG oder WEBP verwenden.',
+        };
     }
 
     public function destroy(Request $request, PostImage $image)
