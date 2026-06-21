@@ -4,7 +4,7 @@ import { Check, Eye, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AdminGuard from "@/components/AdminGuard";
-import { api } from "@/lib/api";
+import { api, postHref } from "@/lib/api";
 
 const statusLabels: Record<string, string> = {
   submitted: "Eingereicht",
@@ -101,11 +101,11 @@ function ModerationPageContent() {
                       {post.user?.name || "Unbekannt"} · {statusLabels[post.status] || post.status}
                     </p>
                   </div>
-                  <Link href={`/posts/${post.id}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm text-wine hover:bg-blush/60">
+                  <Link href={postHref(post)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm text-wine hover:bg-blush/60">
                     <Eye size={16} />
                     Ansehen
                   </Link>
-                  <Link href={`/posts/${post.id}/edit`} className="inline-flex min-h-11 items-center justify-center rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm text-wine hover:bg-blush/60">
+                  <Link href={postHref(post, "/edit")} className="inline-flex min-h-11 items-center justify-center rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm text-wine hover:bg-blush/60">
                     Bearbeiten
                   </Link>
                 </div>

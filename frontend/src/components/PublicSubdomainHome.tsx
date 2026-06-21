@@ -3,11 +3,12 @@
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api, Marker } from "@/lib/api";
+import { api, Marker, postHref } from "@/lib/api";
 import CuffMap from "./CuffMap";
 
 type PublicPost = {
   id: number;
+  slug?: string | null;
   title: string;
   description?: string | null;
   location_label?: string | null;
@@ -78,7 +79,7 @@ export default function PublicSubdomainHome() {
             const product = post.products?.[0];
 
             return (
-              <Link key={post.id} href={`/posts/${post.id}`} className="overflow-hidden rounded-md border border-line bg-cream/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(116,50,70,0.12)]">
+              <Link key={post.id} href={postHref(post)} className="overflow-hidden rounded-md border border-line bg-cream/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(116,50,70,0.12)]">
                 {image ? (
                   <img src={`/storage/${image}`} alt="" className="aspect-[16/10] w-full object-cover" />
                 ) : (

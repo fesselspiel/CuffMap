@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, postHref } from "@/lib/api";
 
 export default function MyPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -17,11 +17,11 @@ export default function MyPostsPage() {
       <div className="mt-5 grid gap-3">
         {posts.map((post) => (
           <div key={post.id} className="grid gap-3 rounded-md border border-line bg-cream/95 p-4 shadow-sm hover:bg-blush/45 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-            <Link href={`/posts/${post.id}`} className="min-w-0">
+            <Link href={postHref(post)} className="min-w-0">
               <strong className="block text-wine sm:inline">{post.title}</strong>
               <span className="mt-2 inline-block rounded-md bg-blush px-2 py-1 text-xs text-wine sm:ml-3 sm:mt-0">{post.status}</span>
             </Link>
-            <Link href={`/posts/${post.id}/edit`} className="inline-flex min-h-11 items-center justify-center rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm text-wine hover:bg-blush/60">
+            <Link href={postHref(post, "/edit")} className="inline-flex min-h-11 items-center justify-center rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm text-wine hover:bg-blush/60">
               Bearbeiten
             </Link>
           </div>

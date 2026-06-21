@@ -41,6 +41,7 @@ class PublicSubdomainController
             'posts' => $posts,
             'markers' => $posts->map(fn (Post $post) => [
                 'id' => $post->id,
+                'slug' => $post->slug,
                 'title' => $post->title,
                 'latitude' => $post->latitude,
                 'longitude' => $post->longitude,

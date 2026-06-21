@@ -1,9 +1,9 @@
 "use client";
 
-import { ImagePlus, LocateFixed, MapPin, Save, Search } from "lucide-react";
+import { ImagePlus, Instagram, Link as LinkIcon, LocateFixed, MapPin, Plus, Save, Search, Trash2, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
-import { api, API_BASE, getStoredToken } from "@/lib/api";
+import { api, API_BASE, getStoredToken, postHref } from "@/lib/api";
 
 type Product = {
   id: number;
@@ -14,9 +14,22 @@ type Product = {
   pivot?: { product_variant_id?: number | null };
 };
 type LocationResult = { display_name: string; lat: string; lon: string; class?: string; category?: string; type?: string; importance?: number };
+type InstagramLink = {
+  id?: number;
+  instagram_media_id?: string | null;
+  permalink: string;
+  username?: string | null;
+  caption?: string | null;
+  media_url?: string | null;
+  thumbnail_url?: string | null;
+  media_type?: string | null;
+  posted_at?: string | null;
+  source?: "manual" | "api";
+};
 type InitialPost = {
   id: number;
   title: string;
+  slug?: string | null;
   description?: string | null;
   latitude: number;
   longitude: number;
@@ -25,6 +38,7 @@ type InitialPost = {
   gps_consent?: boolean;
   images?: Array<{ id: number; path: string; thumbnail_path?: string; width?: number; height?: number }>;
   products?: Product[];
+  instagram_links?: InstagramLink[];
 };
 
 const LocationPickerMap = dynamic(() => import("./LocationPickerMap"), { ssr: false });
@@ -49,9 +63,18 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
   const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState(initialPost?.title || "");
+  const [slug, setSlug] = useState(initialPost?.slug || "");
   const [description, setDescription] = useState(initialPost?.description || "");
   const [locationPrecision, setLocationPrecision] = useState(initialPost?.location_precision || 100);
   const [gpsConsent, setGpsConsent] = useState(Boolean(initialPost?.gps_consent));
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [instagramLinks, setInstagramLinks] = useState<InstagramLink[]>(initialPost?.instagram_links || []);
+  const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
+  const [instagramUsername, setInstagramUsername] = useState("");
+  const [instagramMedia, setInstagramMedia] = useState<InstagramLink[]>([]);
+  const [instagramManualUrl, setInstagramManualUrl] = useState("");
+  const [instagramMessage, setInstagramMessage] = useState("");
+  const [instagramLoading, setInstagramLoading] = useState(false);
   const hasSelectableVariants = (product: Product) => (product.variants?.length || 0) > 0;
   const selectableProducts = products.filter(hasSelectableVariants);
   const currentProduct = selectableProducts.find((product) => String(product.id) === selectedProduct);
@@ -59,6 +82,7 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
   useEffect(() => {
     if (!initialPost) return;
     setTitle(initialPost.title || "");
+    setSlug(initialPost.slug || "");
     setDescription(initialPost.description || "");
     setLatitude(initialPost.latitude);
     setLongitude(initialPost.longitude);
@@ -71,9 +95,13 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
     setProducts(initialPost.products || []);
     setSelectedProduct(initialProduct && hasSelectableVariants(initialProduct) ? String(initialProduct.id) : "");
     setSelectedVariant(initialProduct && hasSelectableVariants(initialProduct) && initialProduct.pivot?.product_variant_id ? String(initialProduct.pivot.product_variant_id) : "");
+    setInstagramLinks(initialPost.instagram_links || []);
   }, [initialPost?.id]);
 
   useEffect(() => {
+    if (getStoredToken()) {
+      api<any>("/auth/me").then((user) => setIsAdmin(user.role?.slug === "administrator")).catch(() => setIsAdmin(false));
+    }
     api<Product[]>("/products/search?limit=200")
       .then((results) => {
         const selectable = results.filter(hasSelectableVariants);
@@ -198,6 +226,79 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
     );
   }
 
+  function normalizeInstagramUrl(value: string) {
+    try {
+      const url = new URL(value.trim());
+      const host = url.hostname.toLowerCase();
+      const path = `/${url.pathname.split("/").filter(Boolean).join("/")}/`;
+      if (!["instagram.com", "www.instagram.com"].includes(host) || !path.match(/^\/(p|reel|reels|tv)\/[A-Za-z0-9_-]+\//)) {
+        return "";
+      }
+      return `https://www.instagram.com${path}`;
+    } catch {
+      return "";
+    }
+  }
+
+  function addInstagramLink(link: InstagramLink) {
+    const permalink = normalizeInstagramUrl(link.permalink);
+    if (!permalink) {
+      setInstagramMessage("Bitte eine genaue Instagram-Post-URL verwenden.");
+      return;
+    }
+    if (instagramLinks.some((item) => normalizeInstagramUrl(item.permalink) === permalink)) {
+      setInstagramMessage("Dieser Instagram-Post ist bereits verlinkt.");
+      return;
+    }
+    if (instagramLinks.length >= 10) {
+      setInstagramMessage("Maximal 10 Instagram-Posts pro Beitrag.");
+      return;
+    }
+    setInstagramLinks((current) => [...current, { ...link, permalink, source: link.source || "manual" }]);
+    setInstagramMessage("");
+  }
+
+  function removeInstagramLink(permalink: string) {
+    const normalized = normalizeInstagramUrl(permalink);
+    setInstagramLinks((current) => current.filter((item) => normalizeInstagramUrl(item.permalink) !== normalized));
+  }
+
+  async function loadInstagramMedia() {
+    const username = instagramUsername.trim().replace(/^@/, "");
+    if (!username) {
+      setInstagramMessage("Bitte einen Instagram-Benutzernamen eingeben.");
+      return;
+    }
+
+    setInstagramLoading(true);
+    setInstagramMessage("");
+    try {
+      const media = await api<any[]>(`/instagram/user-media?username=${encodeURIComponent(username)}`);
+      setInstagramMedia(media.map((item) => ({
+        instagram_media_id: item.id,
+        permalink: item.permalink,
+        username,
+        caption: item.caption,
+        media_url: item.media_url,
+        thumbnail_url: item.thumbnail_url,
+        media_type: item.media_type,
+        posted_at: item.timestamp,
+        source: "api",
+      })));
+      if (media.length === 0) setInstagramMessage("Keine Instagram-Beiträge gefunden.");
+    } catch (error) {
+      setInstagramMedia([]);
+      setInstagramMessage(error instanceof Error ? error.message : "Instagram-Suche fehlgeschlagen. Du kannst den Link manuell einfügen.");
+    } finally {
+      setInstagramLoading(false);
+    }
+  }
+
+  function addManualInstagramLink() {
+    addInstagramLink({ permalink: instagramManualUrl, source: "manual" });
+    setInstagramManualUrl("");
+  }
+
   async function submit(formData: FormData) {
     setMessage("");
     if (latitude === null || longitude === null) {
@@ -217,12 +318,26 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
       location_precision: Number(formData.get("location_precision") || 100),
       gps_consent: formData.get("gps_consent") === "on",
       image_ids: imageId ? [imageId] : [],
-      products: selectedProduct ? [{ product_id: Number(selectedProduct), product_variant_id: selectedVariant ? Number(selectedVariant) : null }] : []
+      products: selectedProduct ? [{ product_id: Number(selectedProduct), product_variant_id: selectedVariant ? Number(selectedVariant) : null }] : [],
+      instagram_links: instagramLinks.map((link) => ({
+        instagram_media_id: link.instagram_media_id || null,
+        permalink: link.permalink,
+        username: link.username || null,
+        caption: link.caption || null,
+        media_url: link.media_url || null,
+        thumbnail_url: link.thumbnail_url || null,
+        media_type: link.media_type || null,
+        posted_at: link.posted_at || null,
+        source: link.source || "manual",
+      })),
     };
+    if (isAdmin && slug.trim()) {
+      Object.assign(payload, { slug: slug.trim() });
+    }
     const response = editing
       ? await api<{ id: number }>(`/posts/${initialPost?.id}`, { method: "PUT", body: JSON.stringify(payload) })
       : await api<{ id: number }>("/posts", { method: "POST", body: JSON.stringify(payload) });
-    window.location.href = `/posts/${response.id}`;
+    window.location.href = postHref(response);
   }
 
   return (
@@ -233,6 +348,13 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
           <h1 className="mt-1 text-2xl font-semibold text-wine sm:text-3xl">{editing ? "Beitrag bearbeiten" : "Beitrag erstellen"}</h1>
         </div>
         <input name="title" required value={title} onChange={(event) => setTitle(event.target.value)} className="min-h-11 w-full rounded-md border border-line px-3 py-2" placeholder="Titel" />
+        {isAdmin && (
+          <label className="block text-sm font-medium text-wine">
+            URL-Slug
+            <input value={slug} onChange={(event) => setSlug(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-line px-3 py-2" placeholder="wird aus dem Titel generiert" />
+            <span className="mt-1 block text-xs text-ink/55">Nur Kleinbuchstaben, Zahlen und Bindestriche.</span>
+          </label>
+        )}
         <textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-28 w-full rounded-md border border-line px-3 py-2 sm:min-h-32" placeholder="Beschreibung" />
         <section className="relative space-y-3 rounded-md border border-line bg-[#fffdf9]/78 p-3 shadow-sm">
           <label className="flex items-center gap-2 font-medium text-wine">
@@ -323,6 +445,38 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
             </figure>
           )}
         </div>
+        <section className="space-y-3 rounded-md border border-line bg-[#fffdf9]/78 p-3 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex items-center gap-2 font-medium text-wine">
+              <Instagram size={18} className="text-rose" />
+              Instagram-Posts
+            </label>
+            <button type="button" onClick={() => setInstagramDialogOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm font-medium text-wine hover:bg-blush/60">
+              <Plus size={16} />
+              Verlinken
+            </button>
+          </div>
+          {instagramLinks.length === 0 ? (
+            <p className="text-sm text-ink/55">Keine Instagram-Posts verlinkt.</p>
+          ) : (
+            <div className="grid gap-2">
+              {instagramLinks.map((link) => (
+                <div key={link.permalink} className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-line bg-[#fffdf9] p-2">
+                  <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-md border border-line bg-blush text-rose">
+                    {link.thumbnail_url || link.media_url ? <img src={link.thumbnail_url || link.media_url || ""} alt="" className="h-full w-full object-cover" /> : <Instagram size={20} />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-wine">{link.username ? `@${link.username}` : "Instagram-Post"}</span>
+                    <a href={link.permalink} target="_blank" className="block truncate text-xs text-rose underline">{link.permalink}</a>
+                  </span>
+                  <button type="button" onClick={() => removeInstagramLink(link.permalink)} className="grid h-10 w-10 place-items-center rounded-md border border-line text-wine hover:bg-blush" aria-label="Instagram-Link entfernen">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
         <div className="space-y-2">
           <div className="relative">
             <span className="block text-sm font-medium text-wine">Produkt auswählen</span>
@@ -402,6 +556,70 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
         </button>
         {message && <p className="text-sm text-ink/65">{message}</p>}
       </form>
+      {instagramDialogOpen && (
+        <div className="fixed inset-0 z-[2000] grid place-items-end bg-wine/35 p-0 backdrop-blur-sm sm:place-items-center sm:p-4">
+          <div className="max-h-[92vh] w-full overflow-auto rounded-t-md border border-line bg-cream p-4 shadow-[0_22px_60px_rgba(52,36,43,0.28)] sm:max-w-3xl sm:rounded-md sm:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-clay">Instagram</p>
+                <h2 className="mt-1 text-xl font-semibold text-wine">Posts verlinken</h2>
+              </div>
+              <button type="button" onClick={() => setInstagramDialogOpen(false)} className="grid h-10 w-10 place-items-center rounded-md border border-line bg-[#fffdf9] text-wine hover:bg-blush">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-3 rounded-md border border-line bg-[#fffdf9]/78 p-3">
+              <label className="text-sm font-medium text-wine">
+                Instagram-Benutzer suchen
+                <div className="mt-1 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <input value={instagramUsername} onChange={(event) => setInstagramUsername(event.target.value)} className="min-h-11 rounded-md border border-line px-3 py-2" placeholder="username oder @username" />
+                  <button type="button" onClick={loadInstagramMedia} disabled={instagramLoading} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-wine px-4 py-2 text-white hover:bg-rose disabled:opacity-60">
+                    <Search size={16} />
+                    {instagramLoading ? "Lade..." : "Suchen"}
+                  </button>
+                </div>
+              </label>
+
+              <label className="text-sm font-medium text-wine">
+                Oder genaue Post-URL einfügen
+                <div className="mt-1 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <input value={instagramManualUrl} onChange={(event) => setInstagramManualUrl(event.target.value)} className="min-h-11 rounded-md border border-line px-3 py-2" placeholder="https://www.instagram.com/p/..." />
+                  <button type="button" onClick={addManualInstagramLink} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line bg-[#fffdf9] px-4 py-2 text-wine hover:bg-blush/60">
+                    <LinkIcon size={16} />
+                    Hinzufügen
+                  </button>
+                </div>
+              </label>
+              {instagramMessage && <p className="text-sm text-clay">{instagramMessage}</p>}
+            </div>
+
+            {instagramMedia.length > 0 && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {instagramMedia.map((item) => {
+                  const selected = instagramLinks.some((link) => normalizeInstagramUrl(link.permalink) === normalizeInstagramUrl(item.permalink));
+                  return (
+                    <button
+                      key={item.permalink}
+                      type="button"
+                      onClick={() => selected ? removeInstagramLink(item.permalink) : addInstagramLink(item)}
+                      className={`grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-md border p-2 text-left ${selected ? "border-wine bg-blush/70" : "border-line bg-[#fffdf9] hover:bg-blush/45"}`}
+                    >
+                      <span className="grid aspect-square place-items-center overflow-hidden rounded-md border border-line bg-blush text-rose">
+                        {item.thumbnail_url || item.media_url ? <img src={item.thumbnail_url || item.media_url || ""} alt="" className="h-full w-full object-cover" /> : <Instagram size={22} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-medium text-wine">{selected ? "Ausgewählt" : "Auswählen"}</span>
+                        <span className="mt-1 line-clamp-3 text-xs leading-5 text-ink/60">{item.caption || item.permalink}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

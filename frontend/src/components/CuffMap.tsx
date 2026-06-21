@@ -3,7 +3,7 @@
 import { Search, SlidersHorizontal } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { api, Marker } from "@/lib/api";
+import { api, Marker, postHref } from "@/lib/api";
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false });
 
@@ -140,7 +140,7 @@ export default function CuffMap() {
             <div className="rounded-md border border-line bg-[#fffdf9] p-3 shadow-sm">
               <h2 className="font-semibold text-wine">{active.title}</h2>
               <p className="text-sm text-ink/65">{active.location_label}</p>
-              <a className="mt-3 inline-block rounded-md bg-blush px-3 py-2 text-sm font-medium text-wine" href={`/posts/${active.id}`}>
+              <a className="mt-3 inline-block rounded-md bg-blush px-3 py-2 text-sm font-medium text-wine" href={postHref(active)}>
                 Beitrag öffnen
               </a>
             </div>
@@ -172,7 +172,7 @@ export default function CuffMap() {
                   </span>
                 </div>
               )}
-              <a className="mt-3 inline-block min-h-10 rounded-md bg-wine px-3 py-2 text-sm font-medium text-white hover:bg-rose" href={`/posts/${active.id}`}>
+              <a className="mt-3 inline-block min-h-10 rounded-md bg-wine px-3 py-2 text-sm font-medium text-white hover:bg-rose" href={postHref(active)}>
                 Beitrag öffnen
               </a>
             </div>

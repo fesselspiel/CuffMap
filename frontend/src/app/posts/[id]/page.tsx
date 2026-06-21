@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { use, useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, postHref } from "@/lib/api";
 
 const PostLocationMap = dynamic(() => import("@/components/PostLocationMap"), { ssr: false });
 
@@ -37,7 +37,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           <h1 className="mt-1 text-2xl font-semibold text-wine sm:text-3xl">{post.title}</h1>
           <p className="text-ink/65">{locationLabel || "Standort auf der Karte markiert"}</p>
         </div>
-        <Link href={`/posts/${post.id}/edit`} className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm font-medium text-wine hover:bg-blush/60 sm:w-fit">
+        <Link href={postHref(post, "/edit")} className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-line bg-[#fffdf9] px-3 py-2 text-sm font-medium text-wine hover:bg-blush/60 sm:w-fit">
           Beitrag bearbeiten
         </Link>
         {image && (
@@ -87,6 +87,25 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
             </a>
           ))}
         </div>
+        {post.instagram_links?.length > 0 && (
+          <section className="space-y-3 rounded-md border border-line bg-[#fffdf9] p-4 shadow-sm">
+            <h2 className="text-lg font-semibold text-wine">Instagram</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {post.instagram_links.map((link: any) => (
+                <a key={link.permalink} href={link.permalink} target="_blank" className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-md border border-line bg-cream/70 p-2 hover:bg-blush/45">
+                  <span className="grid aspect-square place-items-center overflow-hidden rounded-md border border-line bg-blush text-rose">
+                    {(link.thumbnail_url || link.media_url) ? <img src={link.thumbnail_url || link.media_url} alt="" className="h-full w-full object-cover" /> : "IG"}
+                  </span>
+                  <span className="min-w-0">
+                    <strong className="block truncate text-wine">{link.username ? `@${link.username}` : "Instagram-Post"}</strong>
+                    {link.caption && <span className="mt-1 line-clamp-2 block text-sm leading-5 text-ink/65">{link.caption}</span>}
+                    <span className="mt-1 block text-xs text-rose">Auf Instagram öffnen</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
       </article>
     </main>
   );

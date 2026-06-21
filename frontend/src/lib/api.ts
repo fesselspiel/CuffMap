@@ -2,6 +2,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 
 export type Marker = {
   id: number;
+  slug?: string | null;
   title: string;
   latitude: number;
   longitude: number;
@@ -9,6 +10,10 @@ export type Marker = {
   thumbnail_url?: string;
   products: Array<{ id: number; title: string; image_url?: string; shop_url?: string }>;
 };
+
+export function postHref(post: { id: number | string; slug?: string | null }, suffix = "") {
+  return `/posts/${post.slug || post.id}${suffix}`;
+}
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = typeof window !== "undefined" ? getStoredToken() : null;

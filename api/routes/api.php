@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminShopifyController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HotspotController;
+use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
@@ -32,12 +33,14 @@ Route::prefix('auth')->group(function () {
 
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/me/posts', [PostController::class, 'mine'])->middleware('jwt');
-Route::get('/posts/{post}', [PostController::class, 'show'])->middleware('jwt:optional');
+Route::get('/posts/{postRef}', [PostController::class, 'show'])->middleware('jwt:optional');
 Route::post('/posts', [PostController::class, 'store'])->middleware('jwt');
-Route::put('/posts/{post}', [PostController::class, 'update'])->middleware('jwt');
-Route::delete('/posts/{post}', [PostController::class, 'destroy'])->middleware('jwt');
+Route::put('/posts/{postRef}', [PostController::class, 'update'])->middleware('jwt');
+Route::delete('/posts/{postRef}', [PostController::class, 'destroy'])->middleware('jwt');
 
 Route::get('/map/markers', [MapController::class, 'markers']);
+Route::get('/instagram/user', [InstagramController::class, 'user'])->middleware('jwt');
+Route::get('/instagram/user-media', [InstagramController::class, 'userMedia'])->middleware('jwt');
 
 Route::post('/uploads/image', [UploadController::class, 'store'])->middleware('jwt');
 Route::delete('/uploads/{image}', [UploadController::class, 'destroy'])->middleware('jwt');
@@ -59,7 +62,7 @@ Route::prefix('admin')->middleware(['jwt', 'role:administrator,moderator'])->gro
     Route::put('/shopify/variants/{variant}/settings', [AdminShopifyController::class, 'updateVariantSettings']);
     Route::post('/shopify/sync', [AdminShopifyController::class, 'sync'])->middleware('role:administrator');
     Route::get('/posts', [PostController::class, 'adminIndex']);
-    Route::put('/posts/{post}/moderation', [PostController::class, 'moderate']);
+    Route::put('/posts/{postRef}/moderation', [PostController::class, 'moderate']);
 });
 
 Route::post('/webhooks/shopify/products', [WebhookController::class, 'shopifyProduct']);

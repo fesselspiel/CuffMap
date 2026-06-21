@@ -35,10 +35,12 @@ Der Endpunkt erkennt die Nutzer-Subdomain über den `Host`-Header und gibt Nutze
 
 - `GET /api/posts`
 - `GET /api/me/posts`
-- `GET /api/posts/{id}`
+- `GET /api/posts/{idOrSlug}`
 - `POST /api/posts`
-- `PUT /api/posts/{id}`
-- `DELETE /api/posts/{id}`
+- `PUT /api/posts/{idOrSlug}`
+- `DELETE /api/posts/{idOrSlug}`
+
+Beiträge liefern `slug` und optional `instagram_links`. Beim Erstellen wird der Slug automatisch aus dem Titel erzeugt. Administratoren dürfen den Slug beim Bearbeiten setzen. `instagram_links` akzeptiert bis zu 10 konkrete Instagram-Post-URLs.
 
 Beitrag erstellen:
 
@@ -52,9 +54,17 @@ Beitrag erstellen:
   "location_precision": 100,
   "gps_consent": false,
   "image_ids": [1],
-  "products": [{ "product_id": 1, "product_variant_id": null, "variant_group_id": null }]
+  "products": [{ "product_id": 1, "product_variant_id": null, "variant_group_id": null }],
+  "instagram_links": [{ "permalink": "https://www.instagram.com/p/ABC123/" }]
 }
 ```
+
+## Instagram
+
+- `GET /api/instagram/user?username=handle`
+- `GET /api/instagram/user-media?username=handle`
+
+Diese Endpunkte benötigen `INSTAGRAM_GRAPH_ACCESS_TOKEN` und `INSTAGRAM_BUSINESS_ACCOUNT_ID`. Manuelle Instagram-URLs können auch ohne API-Konfiguration gespeichert werden.
 
 ## Karte
 

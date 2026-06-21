@@ -30,6 +30,7 @@ class MapController
 
         return $query->limit(500)->get()->map(fn (Post $post) => [
             'id' => $post->id,
+            'slug' => $post->slug,
             'title' => $post->title,
             'latitude' => $post->latitude,
             'longitude' => $post->longitude,

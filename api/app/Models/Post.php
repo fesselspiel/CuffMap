@@ -12,6 +12,7 @@ class Post extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'slug',
         'description',
         'latitude',
         'longitude',
@@ -49,5 +50,10 @@ class Post extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'post_products')->withPivot(['product_variant_id', 'variant_group_id']);
+    }
+
+    public function instagramLinks()
+    {
+        return $this->hasMany(PostInstagramLink::class)->orderBy('sort_order');
     }
 }
