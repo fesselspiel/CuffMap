@@ -51,7 +51,7 @@ export default function LocationPickerMap({ latitude, longitude, onChange }: Pro
   }, [latitude, longitude, onChange]);
 
   return (
-    <div className="relative h-[300px] overflow-hidden rounded-md border border-line shadow-sm sm:h-[360px]">
+    <div className="relative z-0 h-[300px] overflow-hidden rounded-md border border-line shadow-sm sm:h-[360px]">
       <div ref={node} className="absolute inset-0" />
       <div className="pointer-events-none absolute left-2 right-2 top-2 rounded-md border border-line bg-cream/95 px-3 py-2 text-xs text-wine shadow-sm sm:left-3 sm:right-auto sm:top-3">
         In die Karte klicken oder Nadel ziehen

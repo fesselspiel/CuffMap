@@ -234,18 +234,18 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
         </div>
         <input name="title" required value={title} onChange={(event) => setTitle(event.target.value)} className="min-h-11 w-full rounded-md border border-line px-3 py-2" placeholder="Titel" />
         <textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-28 w-full rounded-md border border-line px-3 py-2 sm:min-h-32" placeholder="Beschreibung" />
-        <section className="space-y-3 rounded-md border border-line bg-[#fffdf9]/78 p-3 shadow-sm">
+        <section className="relative space-y-3 rounded-md border border-line bg-[#fffdf9]/78 p-3 shadow-sm">
           <label className="flex items-center gap-2 font-medium text-wine">
             <MapPin size={18} className="text-rose" />
             Standort
           </label>
-          <div className="relative">
+          <div className="relative z-[1200]">
             <div className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-line bg-[#fffdf9] px-3 py-2">
               <Search size={17} className="shrink-0 text-rose" />
               <input value={locationQuery} onChange={(event) => setLocationQuery(event.target.value)} className="w-full min-w-0 bg-transparent outline-none" placeholder="Stadt, Adresse oder Ort suchen" />
             </div>
             {locationResults.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-md border border-line bg-[#fffdf9] shadow-lg">
+              <div className="absolute left-0 right-0 top-full z-[1300] mt-1 max-h-72 overflow-auto rounded-md border border-line bg-[#fffdf9] shadow-lg">
                 {locationResults.map((result) => (
                   <button
                     key={`${result.lat}-${result.lon}-${result.display_name}`}

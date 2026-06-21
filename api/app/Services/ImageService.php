@@ -23,6 +23,9 @@ class ImageService
         $thumb = "uploads/{$uuid}_thumb.jpg";
 
         $image = $this->loadImage($file->getRealPath(), $mime);
+        $image = $this->applyExifOrientation($image, $file->getRealPath(), $mime);
+        $width = imagesx($image);
+        $height = imagesy($image);
         $image = $this->resize($image, $width, $height, 1920);
         Storage::disk('public')->put($path, $this->encode($image, $mime));
 
@@ -61,6 +64,45 @@ class ImageService
             'image/webp', 'image/x-webp' => 'image/webp',
             default => strtolower((string) $mime),
         };
+    }
+
+    private function applyExifOrientation($image, string $path, string $mime)
+    {
+        if ($mime !== 'image/jpeg' || ! function_exists('exif_read_data')) {
+            return $image;
+        }
+
+        $exif = @exif_read_data($path);
+        $orientation = is_array($exif) ? (int) ($exif['Orientation'] ?? 1) : 1;
+
+        return match ($orientation) {
+            2 => $this->flip($image, IMG_FLIP_HORIZONTAL),
+            3 => $this->rotate($image, 180),
+            4 => $this->flip($image, IMG_FLIP_VERTICAL),
+            5 => $this->rotate($this->flip($image, IMG_FLIP_HORIZONTAL), 270),
+            6 => $this->rotate($image, 270),
+            7 => $this->rotate($this->flip($image, IMG_FLIP_HORIZONTAL), 90),
+            8 => $this->rotate($image, 90),
+            default => $image,
+        };
+    }
+
+    private function flip($image, int $mode)
+    {
+        imageflip($image, $mode);
+
+        return $image;
+    }
+
+    private function rotate($image, int $angle)
+    {
+        $rotated = imagerotate($image, $angle, 0);
+        if ($rotated === false) {
+            return $image;
+        }
+
+        imagedestroy($image);
+        return $rotated;
     }
 
     private function resize($source, int $width, int $height, int $max)
