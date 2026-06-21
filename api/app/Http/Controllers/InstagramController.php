@@ -30,7 +30,7 @@ class InstagramController
             return response()->json($this->ownBusinessMedia());
         }
 
-        $fields = 'id,username,media_count,media.limit(24){id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp}';
+        $fields = 'id,username,media_count,media.limit(50){id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp}';
         $profile = $this->businessDiscovery($username, $fields);
         return response()->json($profile['media']['data'] ?? []);
     }
@@ -78,16 +78,29 @@ class InstagramController
     private function ownBusinessMedia(): array
     {
         $config = $this->config();
-        $response = $this->graphGet($config, "{$config['business_account_id']}/media", [
+        $query = [
             'fields' => 'id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp',
-            'limit' => 24,
-        ]);
+            'limit' => 50,
+        ];
+        $media = [];
+        $after = null;
 
-        if (! $response->successful()) {
-            $this->abortGraphError($response, 'Instagram-Beiträge des eigenen Business Accounts konnten nicht gelesen werden.');
+        for ($page = 0; $page < 5; $page++) {
+            $response = $this->graphGet($config, "{$config['business_account_id']}/media", $after ? $query + ['after' => $after] : $query);
+
+            if (! $response->successful()) {
+                $this->abortGraphError($response, 'Instagram-Beiträge des eigenen Business Accounts konnten nicht gelesen werden.');
+            }
+
+            $media = array_merge($media, $response->json('data') ?: []);
+            $after = $response->json('paging.cursors.after');
+
+            if (! $after) {
+                break;
+            }
         }
 
-        return $response->json('data') ?: [];
+        return $media;
     }
 
     private function graphGet(array $config, string $path, array $query): Response

@@ -69,7 +69,9 @@ Diese Endpunkte benötigen `INSTAGRAM_GRAPH_ACCESS_TOKEN` und `INSTAGRAM_BUSINES
 Die Instagram-Suche prüft zuerst den gespeicherten eigenen Instagram Business Account direkt:
 
 - `GET https://graph.facebook.com/{version}/{ig_business_account_id}?fields=id,username,...`
-- bei passendem Handle: `GET https://graph.facebook.com/{version}/{ig_business_account_id}/media?fields=id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp`
+- bei passendem Handle: `GET https://graph.facebook.com/{version}/{ig_business_account_id}/media?fields=id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp&limit=50`
+
+Für den eigenen Business Account folgt CuffMap bis zu 5 Meta-Paging-Seiten und liefert maximal 250 Medien als flache Liste zurück. Dadurch erscheinen auch ältere eigene Reels und eigene Collab-Reels, sofern Meta sie über den Account-Media-Feed ausliefert.
 
 Nur wenn der eingegebene Handle nicht zum gespeicherten Business Account gehört, nutzt die API Meta Business Discovery:
 
