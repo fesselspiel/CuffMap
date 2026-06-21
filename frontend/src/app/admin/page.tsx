@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckSquare, ClipboardCheck, Eye, EyeOff, RefreshCw, Square } from "lucide-react";
+import { CheckSquare, ClipboardCheck, Eye, EyeOff, Instagram, RefreshCw, Square } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AdminGuard from "@/components/AdminGuard";
@@ -31,6 +31,12 @@ function AdminPageContent() {
   const [selectableAction, setSelectableAction] = useState("no_change");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [instagramConfigured, setInstagramConfigured] = useState(false);
+  const [instagramToken, setInstagramToken] = useState("");
+  const [instagramBusinessAccountId, setInstagramBusinessAccountId] = useState("");
+  const [instagramApiVersion, setInstagramApiVersion] = useState("v23.0");
+  const [clearInstagramToken, setClearInstagramToken] = useState(false);
+  const [instagramMessage, setInstagramMessage] = useState("");
 
   function load() {
     api<any>("/admin/shopify/products")
@@ -39,6 +45,13 @@ function AdminPageContent() {
         setMessage("");
       })
       .catch((error) => setMessage(error.message));
+    api<any>("/admin/settings/instagram")
+      .then((data) => {
+        setInstagramConfigured(Boolean(data.instagram_graph_access_token_configured));
+        setInstagramBusinessAccountId(data.instagram_business_account_id || "");
+        setInstagramApiVersion(data.instagram_api_version || "v23.0");
+      })
+      .catch(() => undefined);
   }
 
   useEffect(load, []);
@@ -87,6 +100,29 @@ function AdminPageContent() {
       setMessage(error.message);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function saveInstagramSettings() {
+    setInstagramMessage("");
+    try {
+      const data = await api<any>("/admin/settings/instagram", {
+        method: "PUT",
+        body: JSON.stringify({
+          instagram_graph_access_token: instagramToken.trim() || null,
+          instagram_business_account_id: instagramBusinessAccountId.trim() || null,
+          instagram_api_version: instagramApiVersion.trim() || "v23.0",
+          clear_token: clearInstagramToken,
+        }),
+      });
+      setInstagramConfigured(Boolean(data.instagram_graph_access_token_configured));
+      setInstagramBusinessAccountId(data.instagram_business_account_id || "");
+      setInstagramApiVersion(data.instagram_api_version || "v23.0");
+      setInstagramToken("");
+      setClearInstagramToken(false);
+      setInstagramMessage("Instagram-Einstellungen gespeichert.");
+    } catch (error) {
+      setInstagramMessage(error instanceof Error ? error.message : "Instagram-Einstellungen konnten nicht gespeichert werden.");
     }
   }
 
@@ -142,6 +178,46 @@ function AdminPageContent() {
         </span>
         <span className="text-sm text-ink/65 sm:text-wine">Beitraege pruefen und freigeben</span>
       </Link>
+
+      <section className="mt-5 rounded-md border border-line bg-cream/95 p-4 shadow-[0_18px_45px_rgba(116,50,70,0.10)]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-clay">
+              <Instagram size={16} />
+              Instagram API
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-wine">Instagram-Suche konfigurieren</h2>
+            <p className="mt-1 text-sm leading-6 text-ink/65">Der Token wird nicht im Klartext angezeigt. Ein leerer Token-Eingabewert behält den gespeicherten Token bei.</p>
+          </div>
+          <span className={`w-fit rounded-md px-2 py-1 text-xs ${instagramConfigured ? "bg-sage text-ink" : "bg-blush text-wine"}`}>
+            {instagramConfigured ? "Token gespeichert" : "Token fehlt"}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_160px]">
+          <label className="text-sm text-ink/70">
+            Graph Access Token
+            <input value={instagramToken} onChange={(event) => setInstagramToken(event.target.value)} type="password" className="mt-1 min-h-11 w-full rounded-md border border-line bg-cream px-3 py-2 text-wine" placeholder={instagramConfigured ? "Neuen Token einfügen oder leer lassen" : "Token einfügen"} />
+          </label>
+          <label className="text-sm text-ink/70">
+            Business Account ID
+            <input value={instagramBusinessAccountId} onChange={(event) => setInstagramBusinessAccountId(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-line bg-cream px-3 py-2 text-wine" placeholder="1784..." />
+          </label>
+          <label className="text-sm text-ink/70">
+            API-Version
+            <input value={instagramApiVersion} onChange={(event) => setInstagramApiVersion(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-line bg-cream px-3 py-2 text-wine" placeholder="v23.0" />
+          </label>
+        </div>
+        <div className="mt-3 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
+          <label className="flex items-center gap-2 text-sm text-ink/70">
+            <input type="checkbox" checked={clearInstagramToken} onChange={(event) => setClearInstagramToken(event.target.checked)} className="h-5 w-5 accent-rose" />
+            gespeicherten Token löschen
+          </label>
+          <button onClick={saveInstagramSettings} className="inline-flex min-h-11 items-center justify-center rounded-md bg-wine px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose">
+            Speichern
+          </button>
+          {instagramMessage && <span className="text-sm text-clay">{instagramMessage}</span>}
+        </div>
+      </section>
 
       {bulkMode && (
         <div className="mt-5 grid gap-3 rounded-md border border-wine/20 bg-blush/65 px-4 py-3 shadow-sm sm:flex sm:flex-wrap sm:items-end">

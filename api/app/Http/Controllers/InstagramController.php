@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -39,9 +40,9 @@ class InstagramController
 
     private function businessDiscovery(string $username, string $fields): array
     {
-        $token = (string) env('INSTAGRAM_GRAPH_ACCESS_TOKEN', '');
-        $businessAccountId = (string) env('INSTAGRAM_BUSINESS_ACCOUNT_ID', '');
-        $version = (string) env('INSTAGRAM_API_VERSION', 'v23.0');
+        $token = (string) AppSetting::getValue('instagram_graph_access_token', env('INSTAGRAM_GRAPH_ACCESS_TOKEN'));
+        $businessAccountId = (string) AppSetting::getValue('instagram_business_account_id', env('INSTAGRAM_BUSINESS_ACCOUNT_ID'));
+        $version = (string) AppSetting::getValue('instagram_api_version', env('INSTAGRAM_API_VERSION', 'v23.0'));
 
         abort_if($token === '' || $businessAccountId === '', 503, 'Instagram API ist nicht konfiguriert.');
 

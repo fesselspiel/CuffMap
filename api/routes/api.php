@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminShopifyController;
+use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HotspotController;
 use App\Http\Controllers\InstagramController;
@@ -61,6 +62,8 @@ Route::prefix('admin')->middleware(['jwt', 'role:administrator,moderator'])->gro
     Route::put('/shopify/products/{product}/settings', [AdminShopifyController::class, 'updateProductSettings']);
     Route::put('/shopify/variants/{variant}/settings', [AdminShopifyController::class, 'updateVariantSettings']);
     Route::post('/shopify/sync', [AdminShopifyController::class, 'sync'])->middleware('role:administrator');
+    Route::get('/settings/instagram', [AdminSettingsController::class, 'instagram'])->middleware('role:administrator');
+    Route::put('/settings/instagram', [AdminSettingsController::class, 'updateInstagram'])->middleware('role:administrator');
     Route::get('/posts', [PostController::class, 'adminIndex']);
     Route::put('/posts/{postRef}/moderation', [PostController::class, 'moderate']);
 });
