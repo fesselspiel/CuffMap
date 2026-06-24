@@ -65,6 +65,31 @@ select:focus {
   min-height: 100%;
 }
 
+.cuffmap-home-control {
+  margin-top: 10px;
+}
+
+.cuffmap-home-control button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  background: #fffdf9;
+  color: #743246;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cuffmap-home-control button:hover,
+.cuffmap-home-control button:focus-visible {
+  background: #f8dfe7;
+  color: #a9435d;
+}
+
 .map-popup img {
   width: 180px;
   height: 110px;
@@ -231,6 +256,11 @@ select:focus {
     width: 36px;
     height: 36px;
     line-height: 36px;
+  }
+
+  .cuffmap-home-control button {
+    width: 36px;
+    height: 36px;
   }
 }
 

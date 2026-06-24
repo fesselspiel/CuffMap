@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { api, Marker, postHref } from "@/lib/api";
@@ -148,9 +148,17 @@ export default function CuffMap() {
         </div>
       </aside>
       <section className="cuffmap-home-map order-1 relative border-l border-white/60 bg-[#f4e8e4] p-1 sm:p-2 lg:order-2">
-        <LeafletMap markers={markers} onSelect={setActive} />
+        <LeafletMap markers={markers} onSelect={setActive} onClear={() => setActive(null)} />
         {active && (
           <aside className="absolute bottom-3 left-3 right-3 z-[500] max-h-[48vh] overflow-auto rounded-md border border-line bg-cream/95 shadow-[0_18px_45px_rgba(116,50,70,0.18)] backdrop-blur sm:bottom-5 sm:left-auto sm:right-5 sm:w-[min(340px,calc(100%-40px))]">
+            <button
+              type="button"
+              onClick={() => setActive(null)}
+              className="absolute right-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-full border border-white/70 bg-[#fffdf9]/95 text-wine shadow-sm backdrop-blur hover:bg-blush"
+              aria-label="Detailansicht schließen"
+            >
+              <X size={18} />
+            </button>
             {active.thumbnail_url && (
               <div className="relative grid max-h-[26vh] min-h-32 place-items-center overflow-hidden border-b border-line bg-wine/15 sm:max-h-[220px]">
                 <img src={active.thumbnail_url} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl brightness-75 saturate-125" aria-hidden="true" />
