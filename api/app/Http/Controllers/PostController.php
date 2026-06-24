@@ -19,6 +19,21 @@ class PostController
         return $query->paginate((int) $request->integer('per_page', 20));
     }
 
+    public function feed(Request $request)
+    {
+        return Post::with([
+            'user:id,name,username,public_subdomain',
+            'images',
+            'products',
+            'instagramLinks',
+        ])
+            ->where('status', 'approved')
+            ->whereHas('images')
+            ->latest('published_at')
+            ->latest()
+            ->paginate((int) $request->integer('per_page', 60));
+    }
+
     public function mine(Request $request)
     {
         return Post::with(['images', 'products', 'hotspots.product', 'instagramLinks'])

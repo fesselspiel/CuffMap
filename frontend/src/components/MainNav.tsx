@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, LogIn, Map, Plus, User, UserCircle } from "lucide-react";
+import { Images, LayoutDashboard, LogIn, Map, Plus, User, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +16,7 @@ type CurrentUser = {
 
 const navItems = [
   { label: "Karte", href: "/", icon: Map },
+  { label: "Feed", href: "/feed", icon: Images },
   { label: "Erstellen", href: "/posts/create", icon: Plus },
   { label: "Meine Beiträge", href: "/me/posts", icon: UserCircle },
   { label: "Profil", href: "/profile", icon: User }

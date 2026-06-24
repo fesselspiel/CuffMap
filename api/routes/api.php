@@ -33,6 +33,7 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('/posts', [PostController::class, 'index']);
+Route::get('/feed', [PostController::class, 'feed']);
 Route::get('/me/posts', [PostController::class, 'mine'])->middleware('jwt');
 Route::get('/posts/{postRef}', [PostController::class, 'show'])->middleware('jwt:optional');
 Route::post('/posts', [PostController::class, 'store'])->middleware('jwt');
