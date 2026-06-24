@@ -3,7 +3,7 @@
 import { ExternalLink, Heart, ImageIcon, Images, MapPin, MessageCircle, ShoppingBag, UserCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { api, postHref } from "@/lib/api";
+import { api, getStoredToken, postHref } from "@/lib/api";
 
 type FeedImage = {
   id: number;
@@ -51,6 +51,17 @@ type Paginated<T> = {
   data: T[];
 };
 
+type FeedComment = {
+  id: number;
+  body: string;
+  created_at?: string;
+  user?: {
+    id: number;
+    name?: string | null;
+    username?: string | null;
+  } | null;
+};
+
 function imageUrl(image?: FeedImage | null) {
   if (!image) return "";
   return `/storage/${image.thumbnail_path || image.path}`;
@@ -74,6 +85,10 @@ export default function FeedGallery() {
   const [activeUser, setActiveUser] = useState<number | "all">("all");
   const [activePost, setActivePost] = useState<FeedPost | null>(null);
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+  const [comments, setComments] = useState<FeedComment[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [commentStatus, setCommentStatus] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,6 +97,25 @@ export default function FeedGallery() {
       .catch(() => setPosts([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!activePost) {
+      document.body.style.overflow = "";
+      setComments([]);
+      setCommentBody("");
+      setCommentStatus("");
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+    api<FeedComment[]>(`/posts/${activePost.slug || activePost.id}/comments`)
+      .then(setComments)
+      .catch(() => setComments([]));
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [activePost]);
 
   const albums = useMemo(() => {
     const grouped = new Map<number, { id: number; label: string; count: number; cover?: string }>();
@@ -110,6 +144,29 @@ export default function FeedGallery() {
       else next.add(postId);
       return next;
     });
+  }
+
+  async function submitComment() {
+    if (!activePost || !commentBody.trim()) return;
+    if (!getStoredToken()) {
+      setCommentStatus("Bitte einloggen, um zu kommentieren.");
+      return;
+    }
+
+    setSubmittingComment(true);
+    setCommentStatus("");
+    try {
+      const comment = await api<FeedComment>(`/posts/${activePost.slug || activePost.id}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ body: commentBody.trim() }),
+      });
+      setComments((current) => [...current, comment]);
+      setCommentBody("");
+    } catch (error) {
+      setCommentStatus(error instanceof Error ? error.message : "Kommentar konnte nicht gespeichert werden.");
+    } finally {
+      setSubmittingComment(false);
+    }
   }
 
   return (
@@ -204,17 +261,19 @@ export default function FeedGallery() {
 
       {activePost && (
         <div className="fixed inset-0 z-[900] bg-ink/70 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true">
-          <div className="mx-auto grid h-full max-w-6xl overflow-hidden rounded-md border border-line bg-cream shadow-[0_24px_80px_rgba(52,36,43,0.36)] lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="relative grid min-h-0 place-items-center bg-[#2b1d24]">
-              <button
-                type="button"
-                onClick={() => setActivePost(null)}
-                className="absolute right-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full border border-white/35 bg-black/35 text-white backdrop-blur hover:bg-black/55"
-                aria-label="Feed-Detail schließen"
-              >
-                <X size={20} />
-              </button>
-              {activeImage && <img src={`/storage/${activeImage.path}`} alt="" className="max-h-full max-w-full object-contain" />}
+          <button
+            type="button"
+            onClick={() => setActivePost(null)}
+            className="absolute right-4 top-4 z-[920] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
+            aria-label="Feed-Detail schließen"
+          >
+            <X size={22} />
+          </button>
+          <div className="mx-auto grid h-full max-w-6xl grid-rows-[minmax(0,1fr)_minmax(250px,42vh)] overflow-hidden rounded-md border border-line bg-cream shadow-[0_24px_80px_rgba(52,36,43,0.36)] lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-1">
+            <div className="relative grid min-h-0 overflow-auto bg-[#2b1d24] p-2 sm:p-4">
+              <div className="grid min-h-full place-items-center">
+                {activeImage && <img src={`/storage/${activeImage.path}`} alt="" className="max-h-full max-w-full object-contain" />}
+              </div>
             </div>
 
             <aside className="min-h-0 overflow-auto border-t border-line bg-[#fffdf9] p-4 lg:border-l lg:border-t-0">
@@ -248,9 +307,50 @@ export default function FeedGallery() {
                   {activeLiked ? "Gefällt dir" : "Gefällt mir"}
                 </button>
                 <Link href={postHref(activePost)} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-line bg-cream px-3 py-2 text-sm font-medium text-wine hover:bg-blush/60">
-                  <MessageCircle size={16} /> Beitrag
+                  <MessageCircle size={16} /> {comments.length} Kommentare
                 </Link>
               </div>
+
+              <section className="mt-5 space-y-3 rounded-md border border-line bg-cream/80 p-3">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-clay">Kommentare</h3>
+                <div className="space-y-2">
+                  {comments.length ? (
+                    comments.map((comment) => (
+                      <article key={comment.id} className="rounded-md border border-line bg-[#fffdf9] p-3">
+                        <p className="text-xs font-semibold text-wine">{comment.user?.username || comment.user?.name || "Community"}</p>
+                        <p className="mt-1 whitespace-pre-line text-sm leading-5 text-ink/75">{comment.body}</p>
+                      </article>
+                    ))
+                  ) : (
+                    <p className="text-sm text-ink/58">Noch keine Kommentare.</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <textarea
+                    value={commentBody}
+                    onChange={(event) => setCommentBody(event.target.value)}
+                    placeholder="Kommentar schreiben..."
+                    className="min-h-24 w-full resize-y rounded-md border border-line px-3 py-2 text-sm"
+                    maxLength={1200}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={submitComment}
+                      disabled={submittingComment || !commentBody.trim()}
+                      className="inline-flex min-h-10 items-center rounded-md bg-wine px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      {submittingComment ? "Speichert..." : "Kommentieren"}
+                    </button>
+                    {!getStoredToken() && (
+                      <Link href="/login" className="text-sm font-medium text-rose hover:text-wine">
+                        Einloggen
+                      </Link>
+                    )}
+                  </div>
+                  {commentStatus && <p className="text-sm text-rose">{commentStatus}</p>}
+                </div>
+              </section>
 
               {activePost.products?.length > 0 && (
                 <section className="mt-5 space-y-2">

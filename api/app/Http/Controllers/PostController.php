@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Post;
+use App\Models\PostComment;
 use App\Models\PostImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,35 @@ class PostController
         }
 
         return $post->load(['user:id,name', 'images', 'products.variants', 'hotspots.product', 'hotspots.variant', 'hotspots.group', 'instagramLinks']);
+    }
+
+    public function comments(string $postRef)
+    {
+        $post = $this->resolvePost($postRef);
+        abort_unless($post->status === 'approved', 404);
+
+        return $post->comments()
+            ->with('user:id,name,username')
+            ->oldest()
+            ->get();
+    }
+
+    public function storeComment(Request $request, string $postRef)
+    {
+        $post = $this->resolvePost($postRef);
+        abort_unless($post->status === 'approved', 404);
+
+        $data = $request->validate([
+            'body' => ['required', 'string', 'min:1', 'max:1200'],
+        ]);
+
+        $comment = PostComment::create([
+            'post_id' => $post->id,
+            'user_id' => $request->user()->id,
+            'body' => trim($data['body']),
+        ]);
+
+        return response()->json($comment->load('user:id,name,username'), 201);
     }
 
     public function store(Request $request)

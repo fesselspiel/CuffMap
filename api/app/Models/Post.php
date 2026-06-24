@@ -56,4 +56,9 @@ class Post extends Model
     {
         return $this->hasMany(PostInstagramLink::class)->orderBy('sort_order');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(PostComment::class)->latest();
+    }
 }
