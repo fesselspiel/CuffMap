@@ -76,6 +76,7 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
   const [instagramManualUrl, setInstagramManualUrl] = useState("");
   const [instagramMessage, setInstagramMessage] = useState("");
   const [instagramLoading, setInstagramLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const hasSelectableVariants = (product: Product) => (product.variants?.length || 0) > 0;
   const selectableProducts = products.filter(hasSelectableVariants);
   const currentProduct = selectableProducts.find((product) => String(product.id) === selectedProduct);
@@ -350,6 +351,22 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
     window.location.href = postHref(response);
   }
 
+  async function deletePost() {
+    if (!initialPost?.id || deleting) return;
+    const confirmed = window.confirm("Diesen Beitrag wirklich löschen? Das kann nicht rückgängig gemacht werden.");
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setMessage("");
+    try {
+      await api(`/posts/${initialPost.id}`, { method: "DELETE" });
+      window.location.href = "/me/posts";
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Beitrag konnte nicht gelöscht werden.");
+      setDeleting(false);
+    }
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-3 py-4 sm:px-4 sm:py-8">
       <form action={submit} className="space-y-4 rounded-md border border-line bg-cream/95 p-4 shadow-[0_18px_45px_rgba(116,50,70,0.10)] sm:space-y-5 sm:p-6">
@@ -563,10 +580,23 @@ export default function PostForm({ initialPost }: { initialPost?: InitialPost })
             </label>
           )}
         </div>
-        <button className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-wine px-4 py-2 font-medium text-white shadow-sm hover:bg-rose sm:w-auto">
-          <Save size={18} />
-          {editing ? "Speichern" : "Einreichen"}
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <button className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-wine px-4 py-2 font-medium text-white shadow-sm hover:bg-rose sm:w-auto">
+            <Save size={18} />
+            {editing ? "Speichern" : "Einreichen"}
+          </button>
+          {editing && (
+            <button
+              type="button"
+              onClick={deletePost}
+              disabled={deleting}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-rose/35 bg-[#fffdf9] px-4 py-2 font-medium text-rose shadow-sm hover:bg-blush disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            >
+              <Trash2 size={18} />
+              {deleting ? "Lösche..." : "Beitrag löschen"}
+            </button>
+          )}
+        </div>
         {message && <p className="text-sm text-ink/65">{message}</p>}
       </form>
       {instagramDialogOpen && (

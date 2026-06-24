@@ -268,11 +268,11 @@ export default function FeedGallery() {
       </section>
 
       {activePost && (
-        <div className="fixed inset-0 z-[900] overflow-y-auto bg-ink/70 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[2000] overflow-y-auto overscroll-contain bg-ink/70 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true" style={{ WebkitOverflowScrolling: "touch" }}>
           <button
             type="button"
             onClick={() => setActivePost(null)}
-            className="absolute right-4 top-4 z-[920] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
+            className="absolute right-4 top-4 z-[2020] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
             aria-label="Feed-Detail schließen"
           >
             <X size={22} />
@@ -282,7 +282,7 @@ export default function FeedGallery() {
               <button
                 type="button"
                 onClick={() => showAdjacentPost(-1)}
-                className="absolute left-4 top-1/2 z-[920] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
+                className="absolute left-4 top-1/2 z-[2020] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
                 aria-label="Vorheriges Bild anzeigen"
               >
                 <ChevronLeft size={24} />
@@ -290,7 +290,7 @@ export default function FeedGallery() {
               <button
                 type="button"
                 onClick={() => showAdjacentPost(1)}
-                className="absolute right-4 top-1/2 z-[920] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
+                className="absolute right-4 top-1/2 z-[2020] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
                 aria-label="Nächstes Bild anzeigen"
               >
                 <ChevronRight size={24} />
