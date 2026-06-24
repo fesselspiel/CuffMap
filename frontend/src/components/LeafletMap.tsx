@@ -88,7 +88,8 @@ export default function LeafletMap({ markers, onSelect, onClear }: { markers: Ma
         button.type = "button";
         button.title = "Alle Orte anzeigen";
         button.setAttribute("aria-label", "Alle Orte anzeigen");
-        button.innerHTML = "H";
+        button.innerHTML =
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.75 12 3l9 7.75"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>';
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.on(button, "click", (event) => {
           L.DomEvent.stop(event);
