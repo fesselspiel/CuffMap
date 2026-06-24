@@ -70,6 +70,8 @@ export default function CuffMap() {
     }
   }, [active, markers]);
 
+  const activeFeedHref = active ? `/feed?post=${encodeURIComponent(active.slug || String(active.id))}` : "/feed";
+
   return (
     <main className="grid min-h-[calc(100vh-92px)] grid-cols-1 lg:min-h-[calc(100vh-57px)] lg:grid-cols-[380px_1fr]">
       <aside className="order-2 border-b border-line bg-cream/92 p-4 shadow-[12px_0_34px_rgba(116,50,70,0.08)] sm:p-5 lg:order-1 lg:border-b-0 lg:border-r">
@@ -160,11 +162,12 @@ export default function CuffMap() {
               <X size={18} />
             </button>
             {active.thumbnail_url && (
-              <div className="relative grid max-h-[26vh] min-h-32 place-items-center overflow-hidden border-b border-line bg-wine/15 sm:max-h-[220px]">
+              <a href={activeFeedHref} className="group relative grid max-h-[26vh] min-h-32 place-items-center overflow-hidden border-b border-line bg-wine/15 sm:max-h-[220px]" aria-label="Bild im Feed öffnen">
                 <img src={active.thumbnail_url} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl brightness-75 saturate-125" aria-hidden="true" />
                 <div className="absolute inset-0 bg-wine/20" />
-                <img src={active.thumbnail_url} alt="" className="relative z-10 h-auto max-h-[26vh] w-auto max-w-full object-contain drop-shadow-[0_14px_28px_rgba(52,36,43,0.28)] sm:max-h-[220px]" />
-              </div>
+                <img src={active.thumbnail_url} alt="" className="relative z-10 h-auto max-h-[26vh] w-auto max-w-full object-contain drop-shadow-[0_14px_28px_rgba(52,36,43,0.28)] transition group-hover:scale-[1.02] sm:max-h-[220px]" />
+                <span className="absolute bottom-2 right-2 z-20 rounded-md bg-black/45 px-2 py-1 text-xs font-medium text-white opacity-0 backdrop-blur transition group-hover:opacity-100">Im Feed öffnen</span>
+              </a>
             )}
             <div className="p-3 sm:p-4">
               <h2 className="text-base font-semibold text-wine sm:text-lg">{active.title}</h2>

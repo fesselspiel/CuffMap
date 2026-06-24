@@ -1,9 +1,12 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, ExternalLink, Heart, ImageIcon, Images, MapPin, MessageCircle, ShoppingBag, UserCircle, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api, getStoredToken, postHref } from "@/lib/api";
+
+const PostLocationMap = dynamic(() => import("@/components/PostLocationMap"), { ssr: false });
 
 type FeedImage = {
   id: number;
@@ -26,6 +29,8 @@ type FeedPost = {
   slug?: string | null;
   title: string;
   description?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   location_label?: string | null;
   published_at?: string | null;
   user?: {
@@ -99,6 +104,15 @@ export default function FeedGallery() {
   }, []);
 
   useEffect(() => {
+    if (posts.length === 0 || activePost || typeof window === "undefined") return;
+    const requestedPost = new URLSearchParams(window.location.search).get("post");
+    if (!requestedPost) return;
+
+    const match = posts.find((post) => String(post.slug || post.id) === requestedPost || String(post.id) === requestedPost);
+    if (match) setActivePost(match);
+  }, [activePost, posts]);
+
+  useEffect(() => {
     if (!activePost) {
       document.body.style.overflow = "";
       setComments([]);
@@ -138,6 +152,9 @@ export default function FeedGallery() {
   const activeLiked = activePost ? likedIds.has(activePost.id) : false;
   const activeIndex = activePost ? visiblePosts.findIndex((post) => post.id === activePost.id) : -1;
   const canNavigatePosts = visiblePosts.length > 1 && activeIndex >= 0;
+  const activeLatitude = Number(activePost?.latitude);
+  const activeLongitude = Number(activePost?.longitude);
+  const activeHasLocation = Number.isFinite(activeLatitude) && Number.isFinite(activeLongitude);
 
   function toggleLike(postId: number) {
     setLikedIds((current) => {
@@ -394,6 +411,21 @@ export default function FeedGallery() {
                       </span>
                     </a>
                   ))}
+                </section>
+              )}
+
+              {activeHasLocation && (
+                <section className="mt-5 overflow-hidden rounded-md border border-line bg-cream/80">
+                  <div className="p-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-clay">Standort</h3>
+                    <p className="mt-2 flex items-center gap-1 text-sm font-medium text-wine">
+                      <MapPin size={15} /> {activePost.location_label || "Ausgewählter Ort"}
+                    </p>
+                    <p className="mt-1 text-xs text-ink/55">{activeLatitude.toFixed(6)}, {activeLongitude.toFixed(6)}</p>
+                  </div>
+                  <div className="h-[260px] border-t border-line">
+                    <PostLocationMap latitude={activeLatitude} longitude={activeLongitude} label={activePost.location_label || activePost.title} />
+                  </div>
                 </section>
               )}
 
