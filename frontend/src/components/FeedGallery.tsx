@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Heart, ImageIcon, Images, MapPin, MessageCircle, ShoppingBag, UserCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Heart, ImageIcon, Images, MapPin, MessageCircle, ShoppingBag, UserCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api, getStoredToken, postHref } from "@/lib/api";
@@ -136,6 +136,8 @@ export default function FeedGallery() {
   const visiblePosts = activeUser === "all" ? posts : posts.filter((post) => (post.user?.id || 0) === activeUser);
   const activeImage = activePost?.images?.[0];
   const activeLiked = activePost ? likedIds.has(activePost.id) : false;
+  const activeIndex = activePost ? visiblePosts.findIndex((post) => post.id === activePost.id) : -1;
+  const canNavigatePosts = visiblePosts.length > 1 && activeIndex >= 0;
 
   function toggleLike(postId: number) {
     setLikedIds((current) => {
@@ -167,6 +169,12 @@ export default function FeedGallery() {
     } finally {
       setSubmittingComment(false);
     }
+  }
+
+  function showAdjacentPost(direction: -1 | 1) {
+    if (!canNavigatePosts) return;
+    const nextIndex = (activeIndex + direction + visiblePosts.length) % visiblePosts.length;
+    setActivePost(visiblePosts[nextIndex]);
   }
 
   return (
@@ -260,7 +268,7 @@ export default function FeedGallery() {
       </section>
 
       {activePost && (
-        <div className="fixed inset-0 z-[900] bg-ink/70 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[900] overflow-y-auto bg-ink/70 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true">
           <button
             type="button"
             onClick={() => setActivePost(null)}
@@ -269,14 +277,34 @@ export default function FeedGallery() {
           >
             <X size={22} />
           </button>
-          <div className="mx-auto grid h-full max-w-6xl grid-rows-[minmax(0,58vh)_minmax(0,1fr)] overflow-hidden rounded-md border border-line bg-cream shadow-[0_24px_80px_rgba(52,36,43,0.36)] lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-1">
-            <div className="relative min-h-0 overflow-hidden bg-[#2b1d24] p-2 sm:p-4">
-              <div className="flex h-full items-start justify-center">
-                {activeImage && <img src={`/storage/${activeImage.path}`} alt="" className="max-h-full max-w-full object-contain" />}
+          {canNavigatePosts && (
+            <>
+              <button
+                type="button"
+                onClick={() => showAdjacentPost(-1)}
+                className="absolute left-4 top-1/2 z-[920] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
+                aria-label="Vorheriges Bild anzeigen"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                type="button"
+                onClick={() => showAdjacentPost(1)}
+                className="absolute right-4 top-1/2 z-[920] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
+                aria-label="Nächstes Bild anzeigen"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </>
+          )}
+          <div className="mx-auto grid min-h-full max-w-6xl overflow-hidden rounded-md border border-line bg-cream shadow-[0_24px_80px_rgba(52,36,43,0.36)] lg:h-full lg:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="relative bg-[#2b1d24] p-2 sm:p-4 lg:min-h-0 lg:overflow-hidden">
+              <div className="flex justify-center lg:h-full lg:items-start">
+                {activeImage && <img src={`/storage/${activeImage.path}`} alt="" className="max-h-[78vh] max-w-full object-contain lg:max-h-full" />}
               </div>
             </div>
 
-            <aside className="min-h-0 overflow-auto border-t border-line bg-[#fffdf9] p-4 lg:border-l lg:border-t-0">
+            <aside className="border-t border-line bg-[#fffdf9] p-4 lg:min-h-0 lg:overflow-auto lg:border-l lg:border-t-0">
               <div className="flex items-start gap-3">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-blush text-sm font-semibold text-wine">
                   {initials(userLabel(activePost))}
