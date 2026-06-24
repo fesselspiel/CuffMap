@@ -70,7 +70,7 @@ export default function CuffMap() {
     }
   }, [active, markers]);
 
-  const activeFeedHref = active ? `/feed?post=${encodeURIComponent(active.slug || String(active.id))}` : "/feed";
+  const activeFeedHref = active ? `/feed?post=${encodeURIComponent(active.slug || String(active.id))}&from=map` : "/feed";
 
   return (
     <main className="grid min-h-[calc(100vh-92px)] grid-cols-1 lg:min-h-[calc(100vh-57px)] lg:grid-cols-[380px_1fr]">

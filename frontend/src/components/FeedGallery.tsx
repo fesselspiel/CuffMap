@@ -194,6 +194,27 @@ export default function FeedGallery() {
     setActivePost(visiblePosts[nextIndex]);
   }
 
+  function closeActivePost() {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const hasQueryPost = url.searchParams.has("post");
+      const shouldReturnToMap = url.searchParams.get("from") === "map";
+
+      if (hasQueryPost && shouldReturnToMap && window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+
+      if (hasQueryPost) {
+        url.searchParams.delete("post");
+        url.searchParams.delete("from");
+        window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      }
+    }
+
+    setActivePost(null);
+  }
+
   return (
     <main className="min-h-[calc(100vh-92px)] bg-[#fff8f1] lg:min-h-[calc(100vh-57px)]">
       <section className="mx-auto max-w-7xl px-3 py-4 sm:px-5 sm:py-6">
@@ -288,7 +309,7 @@ export default function FeedGallery() {
         <div className="fixed inset-0 z-[2000] overflow-y-auto overscroll-contain bg-ink/70 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true" style={{ WebkitOverflowScrolling: "touch" }}>
           <button
             type="button"
-            onClick={() => setActivePost(null)}
+            onClick={closeActivePost}
             className="absolute right-4 top-4 z-[2020] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white shadow-lg backdrop-blur hover:bg-black/65"
             aria-label="Feed-Detail schließen"
           >
