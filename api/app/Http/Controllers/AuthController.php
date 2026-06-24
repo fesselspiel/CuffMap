@@ -10,6 +10,7 @@ use App\Services\LetsEncryptService;
 use App\Support\PublicSubdomain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -96,19 +97,30 @@ class AuthController
             ]);
         }
 
+        $request->user()->update(['public_subdomain' => $subdomain]);
+
+        $certificateStatus = ['status' => $subdomain === null ? 'not_requested' : 'pending'];
         if ($subdomain !== null) {
             try {
-                $this->letsEncrypt->requestForSubdomain($subdomain, $request->user());
+                $certificateStatus = $this->letsEncrypt->queueForSubdomain($subdomain, $request->user());
             } catch (RuntimeException $exception) {
-                throw ValidationException::withMessages([
-                    'public_subdomain' => 'Die Subdomain ist gueltig, aber das HTTPS-Zertifikat konnte nicht automatisch erstellt werden: '.$exception->getMessage(),
+                $certificateStatus = [
+                    'status' => 'failed',
+                    'message' => $exception->getMessage(),
+                ];
+                Log::warning('Let’s Encrypt certificate queueing failed after subdomain update.', [
+                    'user_id' => $request->user()->id,
+                    'subdomain' => $subdomain,
+                    'message' => $exception->getMessage(),
                 ]);
             }
         }
 
-        $request->user()->update(['public_subdomain' => $subdomain]);
+        $user = $request->user()->fresh()->load('role');
 
-        return $request->user()->fresh()->load('role');
+        return response()->json(array_merge($user->toArray(), [
+            'certificate_status' => $certificateStatus,
+        ]));
     }
 
     public function forgotPassword()

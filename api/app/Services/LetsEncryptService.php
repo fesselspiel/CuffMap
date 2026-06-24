@@ -39,6 +39,52 @@ class LetsEncryptService
         return count($results) === 1 ? $results[0] : ['status' => 'processed', 'domains' => $results];
     }
 
+    public function queueForSubdomain(?string $subdomain, ?User $user = null): array
+    {
+        $subdomain = PublicSubdomain::normalize($subdomain);
+        if (! $this->enabled()) {
+            return ['status' => 'skipped', 'reason' => 'disabled'];
+        }
+
+        if (! PublicSubdomain::isValid($subdomain)) {
+            throw new RuntimeException('Invalid public subdomain.');
+        }
+
+        $baseDomains = PublicSubdomain::baseDomains();
+        if ($baseDomains === []) {
+            throw new RuntimeException('PUBLIC_BASE_DOMAIN or PUBLIC_BASE_DOMAINS is not configured.');
+        }
+
+        $domains = array_map(fn (string $baseDomain) => $subdomain.'.'.$baseDomain, $baseDomains);
+        $pending = array_values(array_filter($domains, fn (string $domain) => ! $this->certificateExists($domain)));
+        if ($pending === []) {
+            return ['status' => 'exists', 'domains' => $domains];
+        }
+
+        $pid = $this->spawn([
+            PHP_BINARY ?: 'php',
+            base_path('artisan'),
+            'cuffmap:issue-subdomain-certificate',
+            $subdomain,
+        ], storage_path('logs/letsencrypt-subdomains.log'));
+
+        if ($user) {
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'letsencrypt.certificate.queued',
+                'subject_type' => User::class,
+                'subject_id' => $user->id,
+                'payload' => [
+                    'subdomain' => $subdomain,
+                    'domains' => $pending,
+                    'pid' => $pid,
+                ],
+            ]);
+        }
+
+        return ['status' => 'queued', 'domains' => $pending, 'pid' => $pid];
+    }
+
     private function requestCertificate(string $domain, ?User $user = null): array
     {
         if ($this->certificateExists($domain)) {
@@ -149,5 +195,32 @@ class LetsEncryptService
             'exit_code' => $exitCode ?? 1,
             'output' => $output,
         ];
+    }
+
+    private function spawn(array $command, string $logPath): string
+    {
+        $shellCommand = implode(' ', array_map('escapeshellarg', $command))
+            .' >> '.escapeshellarg($logPath).' 2>&1 & echo $!';
+
+        $process = proc_open(['/bin/sh', '-c', $shellCommand], [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ], $pipes);
+
+        if (! is_resource($process)) {
+            throw new RuntimeException('Could not queue certbot process.');
+        }
+
+        $pid = trim(stream_get_contents($pipes[1]));
+        $error = trim(stream_get_contents($pipes[2]));
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+
+        if ($pid === '') {
+            throw new RuntimeException($error !== '' ? $error : 'Could not queue certbot process.');
+        }
+
+        return $pid;
     }
 }

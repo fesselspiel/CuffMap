@@ -8,6 +8,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [publicSubdomain, setPublicSubdomain] = useState("");
   const [message, setMessage] = useState("");
+  const [savingSubdomain, setSavingSubdomain] = useState(false);
 
   useEffect(() => {
     api<any>("/auth/me")
@@ -42,7 +43,9 @@ export default function ProfilePage() {
   const primaryBaseDomain = baseDomains[0] || "cuffmap.fesselspiel.com";
 
   async function saveSubdomain() {
-    setMessage("");
+    if (savingSubdomain) return;
+    setSavingSubdomain(true);
+    setMessage("Subdomain wird gespeichert...");
     try {
       const updated = await api<any>("/auth/me/subdomain", {
         method: "PUT",
@@ -50,9 +53,19 @@ export default function ProfilePage() {
       });
       setUser(updated);
       setPublicSubdomain(updated.public_subdomain || "");
-      setMessage("Subdomain gespeichert.");
+      if (updated.certificate_status?.status === "queued") {
+        setMessage("Subdomain gespeichert. Das HTTPS-Zertifikat wird im Hintergrund eingerichtet.");
+      } else if (updated.certificate_status?.status === "exists") {
+        setMessage("Subdomain gespeichert. Das HTTPS-Zertifikat ist bereits vorhanden.");
+      } else if (updated.certificate_status?.status === "failed") {
+        setMessage(`Subdomain gespeichert. HTTPS konnte noch nicht gestartet werden: ${updated.certificate_status.message}`);
+      } else {
+        setMessage("Subdomain gespeichert.");
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Subdomain konnte nicht gespeichert werden.");
+    } finally {
+      setSavingSubdomain(false);
     }
   }
 
@@ -80,9 +93,13 @@ export default function ProfilePage() {
                   />
                   <span className="max-w-[45%] truncate text-sm text-ink/55 sm:max-w-none">.{primaryBaseDomain}</span>
                 </div>
-                <button onClick={saveSubdomain} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-wine px-4 py-2 text-white shadow-sm hover:bg-rose">
-                  <Save size={16} />
-                  Speichern
+                <button
+                  onClick={saveSubdomain}
+                  disabled={savingSubdomain}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-wine px-4 py-2 text-white shadow-sm hover:bg-rose disabled:cursor-wait disabled:opacity-70"
+                >
+                  <Save size={16} className={savingSubdomain ? "animate-pulse" : ""} />
+                  {savingSubdomain ? "Speichert..." : "Speichern"}
                 </button>
               </div>
               <p className="mt-2 text-xs leading-5 text-ink/55">
