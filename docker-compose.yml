@@ -154,7 +154,17 @@ services:
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - "trap 'exit 0' TERM; while true; do certbot renew --webroot --webroot-path ${LETSENCRYPT_WEBROOT:-/var/www/certbot} --preferred-challenges http --quiet; sleep 12h; done"
+      - >
+        trap 'exit 0' TERM;
+        while true; do
+          for conf in /etc/letsencrypt/renewal/*.conf; do
+            [ -f "$$conf" ] || continue;
+            grep -Eq '^authenticator *= *webroot' "$$conf" || continue;
+            name="$$(basename "$$conf" .conf)";
+            certbot renew --cert-name "$$name" --webroot --webroot-path ${LETSENCRYPT_WEBROOT:-/var/www/certbot} --preferred-challenges http --quiet || true;
+          done;
+          sleep 12h;
+        done
     volumes:
       - ${LETSENCRYPT_CERTS_PATH:-./storage/letsencrypt}:/etc/letsencrypt
       - ${LETSENCRYPT_WEBROOT_PATH:-./storage/certbot}:${LETSENCRYPT_WEBROOT:-/var/www/certbot}
