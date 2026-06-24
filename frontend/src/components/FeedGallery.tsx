@@ -269,9 +269,9 @@ export default function FeedGallery() {
           >
             <X size={22} />
           </button>
-          <div className="mx-auto grid h-full max-w-6xl grid-rows-[minmax(0,1fr)_minmax(250px,42vh)] overflow-hidden rounded-md border border-line bg-cream shadow-[0_24px_80px_rgba(52,36,43,0.36)] lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-1">
-            <div className="relative grid min-h-0 overflow-auto bg-[#2b1d24] p-2 sm:p-4">
-              <div className="grid min-h-full place-items-center">
+          <div className="mx-auto grid h-full max-w-6xl grid-rows-[minmax(0,58vh)_minmax(0,1fr)] overflow-hidden rounded-md border border-line bg-cream shadow-[0_24px_80px_rgba(52,36,43,0.36)] lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-1">
+            <div className="relative min-h-0 overflow-hidden bg-[#2b1d24] p-2 sm:p-4">
+              <div className="flex h-full items-start justify-center">
                 {activeImage && <img src={`/storage/${activeImage.path}`} alt="" className="max-h-full max-w-full object-contain" />}
               </div>
             </div>
